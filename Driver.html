@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق السائق - جامعة الناجي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6;
+            --bg: #0f172a; --card-bg: rgba(30, 41, 59, 0.85); --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #f1f5f9; --text-light: #94a3b8; --success: #10b981; --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        
+        .app-container { width: 100%; max-width: 400px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 25px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(20px); }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header .icon-box { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; margin: 0 auto 15px; box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
+        .header h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 5px; }
+        .header p { color: var(--text-light); font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-light); }
+        .form-group input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; font-family: inherit; font-size: 1rem; font-weight: 700; outline: none; transition: 0.3s; }
+        .form-group input:focus { border-color: var(--primary-light); box-shadow: 0 0 10px rgba(59,130,246,0.3); }
+
+        .status-box { text-align: center; padding: 15px; border-radius: 12px; margin-bottom: 25px; font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .status-offline { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .status-online { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        .action-btn { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-start { background: linear-gradient(135deg, var(--success), #059669); color: white; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
+        .btn-start:hover { transform: translateY(-3px); }
+        .btn-stop { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
+        .btn-stop:hover { transform: translateY(-3px); }
+
+        .coords-box { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; font-family: monospace; font-size: 0.85rem; color: var(--text-light); text-align: center; display: none; border: 1px dashed var(--glass-border); }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <div class="icon-box"><i class="fas fa-bus"></i></div>
+            <h1>بوابة السائق</h1>
+            <p>خطوط النقل الجامعية</p>
+        </div>
+
+        <div class="status-box status-offline" id="statusBox">
+            <i class="fas fa-wifi"></i> الرحلة متوقفة
+        </div>
+
+        <div class="form-group">
+            <label>اسم السائق</label>
+            <input type="text" id="driverName" placeholder="أدخل اسمك" value="أحمد علي">
+        </div>
+        <div class="form-group">
+            <label>المنطقة (الخط)</label>
+            <input type="text" id="driverArea" placeholder="مثال: اليرموك" value="اليرموك">
+        </div>
+
+        <button class="action-btn btn-start" id="startBtn" onclick="startTrip()">
+            <i class="fas fa-play"></i> بدء الرحلة
+        </button>
+        <button class="action-btn btn-stop" id="stopBtn" onclick="stopTrip()" style="display: none;">
+            <i class="fas fa-stop"></i> إنهاء الرحلة
+        </button>
+
+        <div class="coords-box" id="coordsBox">
+            Lat: <span id="latTxt">-</span> <br> Lng: <span id="lngTxt">-</span>
+        </div>
+    </div>
+
+    <script>
+        let watchId = null;
+
+        function startTrip() {
+            if (!navigator.geolocation) {
+                alert("متصفحك لا يدعم تحديد الموقع!");
+                return;
+            }
+
+            const driverName = document.getElementById('driverName').value;
+            const driverArea = document.getElementById('driverArea').value;
+
+            if(!driverName || !driverArea) {
+                alert("الرجاء إدخال الاسم والمنطقة أولاً.");
+                return;
+            }
+
+            // تغيير الواجهة
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'flex';
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = 'status-box status-online';
+            statusBox.innerHTML = '<i class="fas fa-satellite-dish"></i> جاري بث الموقع...';
+            document.getElementById('coordsBox').style.display = 'block';
+
+            // بدء تتبع الموقع
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    document.getElementById('latTxt').innerText = lat.toFixed(5);
+                    document.getElementById('lngTxt').innerText = lng.toFixed(5);
+
+                    // ═══════════════════════════════════════════════
+                    // هنا لاحقاً سيتم إرسال البيانات إلى Supabase:
+                    // ═══════════════════════════════════════════════
+                    console.log(`[إرسال] السائق: ${driverName} | المنطقة: ${driverArea} | Lat: ${lat} | Lng: ${lng}`);
+                },
+                (error) => {
+                    alert("خطأ في جلب الموقع. يرجى السماح بالوصول للموقع.");
+                    stopTrip();
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        }
+
+        function stopTrip() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            document.getElementById('startBtn').style.display = 'flex';
+            document.getElementById('stopBtn').style.display = 'none';
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = 'status-box status-offline';
+            statusBox.innerHTML = '<i class="fas fa-wifi"></i> الرحلة متوقفة';
+            document.getElementById('coordsBox').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

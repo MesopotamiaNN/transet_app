@@ -1,0 +1,25 @@
+{
+  "stats": [
+    { "id": 1, "icon": "fa-chalkboard-teacher", "value": 294, "label": { "ar": "الأساتذة", "en": "Professors", "ku": "مامۆستایان" } },
+    { "id": 2, "icon": "fa-users-cog", "value": 70, "label": { "ar": "الفنيين والإداريين", "en": "Staff", "ku": "کارمەندان" } },
+    { "id": 3, "icon": "fa-university", "value": 5, "label": { "ar": "الكليات", "en": "Colleges", "ku": "کۆلێژەکان" } },
+    { "id": 4, "icon": "fa-book", "value": 12, "label": { "ar": "الأقسام", "en": "Departments", "ku": "بەشەکان" } },
+    { "id": 5, "icon": "fa-user-graduate", "value": 900, "label": { "ar": "الطلاب", "en": "Students", "ku": "قوتابیان" } }
+  ],
+  "colleges": [
+    { "id": 1, "icon": "fa-tooth", "name": { "ar": "كلية طب الأسنان", "en": "College of Dentistry", "ku": "کۆلێژی ددان" } },
+    { "id": 2, "icon": "fa-pills", "name": { "ar": "كلية الصيدلة", "en": "College of Pharmacy", "ku": "کۆلێژی دەرمانسازی" } },
+    { "id": 3, "icon": "fa-ruler-combined", "name": { "ar": "كلية الهندسة", "en": "College of Engineering", "ku": "کۆلێژی ئەندازیاری" } },
+    { "id": 4, "icon": "fa-stethoscope", "name": { "ar": "كلية التقنيات الصحية", "en": "College of Health Tech", "ku": "کۆلێژی تەکنیکی تەندروستی" } },
+    { "id": 5, "icon": "fa-book-reader", "name": { "ar": "كلية التربية", "en": "College of Education", "ku": "کۆلێژی پەروەردە" } }
+  ],
+  "news": [
+    {
+      "id": 1,
+      "date": "2026-11-17",
+      "image_url": "https://alnaji-uni.edu.iq/wp-content/uploads/2024/11/entrance1.jpg",
+      "title": { "ar": "بدء التسجيل للعام الدراسي الجديد", "en": "Registration Open for New Academic Year", "ku": "تۆمارکردن بۆ ساڵی نوێ دەستی پێکرد" },
+      "content": { "ar": "تعلن جامعة الناجي عن بدء استقبال طلبات التسجيل للعام الدراسي 2026-2027 لجميع الكليات.", "en": "Al-Naji University announces the start of accepting registration applications for the 2026-2027 academic year.", "ku": "زانکۆی نەجی ڕایدەگەیەنێت کە دەست بە وەرگرتنی داواکاری تۆمارکردن دەکات بۆ ساڵی خوێندنی 2026-2027." }
+    }
+  ]
+}
