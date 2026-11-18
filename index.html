@@ -5,25 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خطوط النقل - جامعة الناجي</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
     
     <!-- مكتبة الخريطة -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6;
             --bg: #f0f4ff; --card-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.25);
             --text: #1f2937; --text-light: #6b7280;
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            --radius: 20px; --transition: 0.3s ease;
             --success: #10b981; --warning: #f59e0b;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
 
@@ -33,12 +33,13 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
         }
         .top-bar h1 { font-size: 1.2rem; color: var(--primary); font-weight: 900; display: flex; align-items: center; gap: 10px; }
-        .back-btn { text-decoration: none; color: white; background: var(--primary); padding: 8px 15px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; transition: 0.3s; }
+        .back-btn { text-decoration: none; color: white; background: var(--primary); padding: 8px 15px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
         .back-btn:hover { background: var(--primary-light); }
+        .driver-btn { background: var(--accent); }
 
         /* الخريطة الحية */
-        .map-wrapper { padding: 15px; }
-        #map { height: 300px; width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); z-index: 1; }
+        .map-wrapper { padding: 15px; position: relative; }
+        #map { height: 300px; width: 100%; border-radius: 20px; box-shadow: var(--shadow); z-index: 1; }
         
         .live-badge {
             position: absolute; top: 25px; right: 25px; z-index: 1000;
@@ -50,7 +51,6 @@
 
         /* قسم البحث والحجز */
         .booking-section { padding: 0 15px; max-width: 800px; margin: 0 auto; }
-        
         .section-title { font-size: 1.3rem; font-weight: 900; color: var(--primary); margin: 20px 0 15px; display: flex; align-items: center; gap: 10px; }
         .section-title i { color: var(--accent); }
 
@@ -59,17 +59,10 @@
             border-radius: 50px; padding: 5px 20px; margin-bottom: 20px; box-shadow: var(--shadow);
         }
         .search-box i { color: var(--text-light); font-size: 1.1rem; }
-        .search-box input {
-            flex: 1; border: none; outline: none; padding: 15px 10px;
-            font-size: 1rem; font-weight: 700; background: transparent; color: var(--text);
-        }
+        .search-box input { flex: 1; border: none; outline: none; padding: 15px 10px; font-size: 1rem; font-weight: 700; background: transparent; color: var(--text); }
 
         .routes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-
-        .route-card {
-            background: white; border-radius: 15px; padding: 20px; box-shadow: var(--shadow);
-            border-right: 5px solid var(--primary-light); position: relative;
-        }
+        .route-card { background: white; border-radius: 15px; padding: 20px; box-shadow: var(--shadow); border-right: 5px solid var(--primary-light); position: relative; }
         
         .route-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .driver-info h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 3px; }
@@ -84,14 +77,9 @@
         .price { font-size: 1.2rem; font-weight: 900; color: var(--primary); }
         .price span { font-size: 0.7rem; color: var(--text-light); }
 
-        .book-btn {
-            background: var(--primary); color: white; text-decoration: none;
-            padding: 8px 20px; border-radius: 50px; font-weight: 800; font-size: 0.9rem;
-            transition: 0.3s; display: flex; align-items: center; gap: 8px;
-        }
+        .book-btn { background: var(--primary); color: white; text-decoration: none; padding: 8px 20px; border-radius: 50px; font-weight: 800; font-size: 0.9rem; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .book-btn:hover { background: var(--primary-light); transform: scale(1.05); }
         .book-btn.disabled { background: gray; cursor: not-allowed; pointer-events: none; }
-
         .seats-alert { font-size: 0.75rem; color: var(--warning); font-weight: 800; margin-top: 10px; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
@@ -99,43 +87,46 @@
 
     <!-- الشريط العلوي -->
     <div class="top-bar">
-        <h1><i class="fas fa-bus-alt"></i> خطوط النقل الجامعية</h1>
-        <a href="portal.html" class="back-btn">رجوع للبوابة</a>
+        <h1><i class="fas fa-bus-alt"></i> خطوط النقل</h1>
+        <div style="display: flex; gap: 8px;">
+            <a href="driver.html" class="back-btn driver-btn"><i class="fas fa-user-tie"></i> السائق</a>
+            <a href="portal.html" class="back-btn">رجوع</a>
+        </div>
     </div>
 
     <!-- الخريطة الحية -->
-    <div class="map-wrapper" style="position: relative;">
-        <div class="live-badge"><i class="fas fa-circle" style="font-size:8px;"></i> مباشر الآن</div>
+    <div class="map-wrapper">
+        <div class="live-badge" id="liveBadge" style="display: none;"><i class="fas fa-circle" style="font-size:8px;"></i> مباشر الآن</div>
         <div id="map"></div>
     </div>
 
     <!-- قسم الحجز -->
     <div class="booking-section">
         <h2 class="section-title"><i class="fas fa-search-location"></i> ابحث عن خط منطقتك</h2>
-        
         <div class="search-box">
             <i class="fas fa-map-marker-alt"></i>
             <input type="text" id="searchInput" placeholder="اكتب اسم المنطقة (مثال: اليرموك، زيونة...)" onkeyup="filterRoutes()">
         </div>
-
-        <div class="routes-grid" id="routesContainer">
-            <!-- سيتم بناء البطاقات هنا -->
-        </div>
+        <div class="routes-grid" id="routesContainer"></div>
     </div>
 
     <script>
         // ═══════════════════════════════════════════════════════
-        // 1. البيانات التجريبية
+        // ⚠️ ضع بيانات Supabase الخاصة بك هنا 👇 (نفس بيانات صفحة السائق)
         // ═══════════════════════════════════════════════════════
+        const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
+        const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // بيانات تجريبية للحجز
         const routesData = [
             { id: 1, driver_name: "أحمد علي", driver_phone: "07811234567", car: "كيا باص", area: "اليرموك", total_seats: 4, available_seats: 2, price: 50000, time: "07:00 صباحاً" },
-            { id: 2, driver_name: "حسين محمد", driver_phone: "07709876543", car: "تويوتا كامري", area: "الحرية", total_seats: 4, available_seats: 4, price: 45000, time: "06:45 صباحاً" },
-            { id: 3, driver_name: "مصطفى كريم", driver_phone: "07501234567", car: "هيونداي", area: "زيونة", total_seats: 3, available_seats: 0, price: 60000, time: "07:15 صباحاً" },
-            { id: 4, driver_name: "علي جاسم", driver_phone: "07901112223", car: "كيا سيراتو", area: "المنصور", total_seats: 4, available_seats: 1, price: 55000, time: "07:00 صباحاً" }
+            { id: 2, driver_name: "حسين محمد", driver_phone: "07709876543", car: "تويوتا كامري", area: "الحرية", total_seats: 4, available_seats: 4, price: 45000, time: "06:45 صباحاً" }
         ];
 
         // ═══════════════════════════════════════════════════════
-        // 2. تهيئة الخريطة ومحاكاة حركة الباص
+        // الخريطة
         // ═══════════════════════════════════════════════════════
         const startLat = 33.2765;
         const startLng = 44.3380;
@@ -145,6 +136,8 @@
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
+        L.marker([startLat, startLng]).addTo(map).bindPopup("<b>جامعة الناجي</b>");
+
         const busIcon = L.divIcon({
             className: 'custom-bus-icon',
             html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; font-size:16px; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus"></i></div>',
@@ -152,39 +145,50 @@
             iconAnchor: [17, 17]
         });
 
-        // الجامعة
-        L.marker([startLat, startLng]).addTo(map).bindPopup("<b>جامعة الناجي</b>");
-
-        // الباص
-        let currentBusLat = startLat - 0.01;
-        let currentBusLng = startLng - 0.01;
-        const busMarker = L.marker([currentBusLat, currentBusLng], {icon: busIcon}).addTo(map);
-        
-        // محاكاة الحركة
-        let step = 0;
-        setInterval(() => {
-            if (step >= 100) return;
-            step++;
-            currentBusLat += (startLat - currentBusLat) * 0.05;
-            currentBusLng += (startLng - currentBusLng) * 0.05;
-            busMarker.setLatLng([currentBusLat, currentBusLng]);
-            
-            L.polyline([[currentBusLat, currentBusLng], [startLat, startLng]], {
-                color: '#3b82f6', weight: 3, opacity: 0.4, dashArray: '5, 10'
-            }).addTo(map);
-        }, 2000);
+        let busMarker = null;
 
         // ═══════════════════════════════════════════════════════
-        // 3. عرض الخطوط والبحث
+        // التتبع الحي
+        // ═══════════════════════════════════════════════════════
+        async function loadLiveBuses() {
+            // 1. جلب الباصات النشطة حالياً
+            const { data, error } = await supabaseClient.from('live_buses').select('*');
+            
+            if (data && data.length > 0) {
+                const bus = data[0]; // نأخذ أول باص
+                document.getElementById('liveBadge').style.display = 'flex';
+                busMarker = L.marker([bus.lat, bus.lng], {icon: busIcon}).addTo(map);
+                busMarker.bindPopup(`<b>كابتن ${bus.driver_name}</b><br>خط ${bus.area}`);
+                map.setView([bus.lat, bus.lng], 15);
+            }
+
+            // 2. الاستماع للتحديثات الفورية (Realtime)
+            supabaseClient.channel('custom-all-channel')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
+                    const updatedBus = payload.new;
+                    
+                    if (updatedBus && updatedBus.lat && updatedBus.lng) {
+                        document.getElementById('liveBadge').style.display = 'flex';
+                        if (!busMarker) {
+                            busMarker = L.marker([updatedBus.lat, updatedBus.lng], {icon: busIcon}).addTo(map);
+                            busMarker.bindPopup(`<b>كابتن ${updatedBus.driver_name}</b>`);
+                        } else {
+                            busMarker.setLatLng([updatedBus.lat, updatedBus.lng]);
+                        }
+                    }
+                })
+                .subscribe();
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // عرض الخطوط والبحث
         // ═══════════════════════════════════════════════════════
         function renderRoutes(routes) {
             const container = document.getElementById('routesContainer');
-            
             if (routes.length === 0) {
-                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-light);"><i class="fas fa-search-minus" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i><h3>لا توجد خطوط متاحة.</h3></div>`;
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-light);"><h3>لا توجد خطوط متاحة.</h3></div>`;
                 return;
             }
-
             container.innerHTML = routes.map(route => {
                 const isFull = route.available_seats === 0;
                 return `
@@ -196,23 +200,18 @@
                         </div>
                         <div class="area-badge">${route.area}</div>
                     </div>
-                    
                     <div class="route-details">
                         <span><i class="fas fa-clock"></i> الانطلاق: ${route.time}</span>
                         <span><i class="fas fa-users"></i> المقاعد: ${route.available_seats} / ${route.total_seats}</span>
                     </div>
-
-                    ${!isFull ? `<div class="seats-alert"><i class="fas fa-exclamation-circle"></i> متبقي ${route.available_seats} مقاعد فقط!</div>` : ''}
-
+                    ${!isFull ? `<div class="seats-alert"><i class="fas fa-exclamation-circle"></i> متبقي ${route.available_seats} مقاعد!</div>` : ''}
                     <div class="route-footer">
-                        <div class="price">${route.price.toLocaleString()} <span>د.ع / شهرياً</span></div>
-                        ${isFull 
-                            ? `<a class="book-btn disabled"><i class="fas fa-times"></i> مكتمل</a>` 
+                        <div class="price">${route.price.toLocaleString()} <span>د.ع</span></div>
+                        ${isFull ? `<a class="book-btn disabled"><i class="fas fa-times"></i> مكتمل</a>` 
                             : `<a href="https://wa.me/964${route.driver_phone.substring(1)}?text=مرحباً كابتن ${route.driver_name}، أريد حجز مقعد في خط ${route.area}." target="_blank" class="book-btn"><i class="fab fa-whatsapp"></i> حجز</a>`
                         }
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
         }
 
@@ -223,7 +222,10 @@
         }
 
         // التشغيل
-        renderRoutes(routesData);
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRoutes(routesData);
+            loadLiveBuses();
+        });
     </script>
 </body>
 </html>
