@@ -11,44 +11,68 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
+            /* الوضع النهاري */
             --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6;
             --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --bg: #f0f4ff; --white: #ffffff; --text: #1f2937; --text-muted: #64748b;
+            --bg: #f0f4ff; --white: #ffffff; --card-bg: #ffffff;
+            --text: #1f2937; --text-muted: #64748b;
             --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
             --shadow-md: 0 10px 25px rgba(0,0,0,0.1);
             --shadow-lg: 0 20px 40px rgba(0,0,0,0.15);
+            --nav-bg: rgba(255, 255, 255, 0.85);
+            --border-light: #f1f5f9;
             --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body, html { height: 100%; overflow: hidden; background: var(--bg); }
-        
-        /* خريطة أنيقة (Carto Voyager) */
-        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; }
 
+        /* الوضع الليلي (Dark Mode) */
+        body.dark-mode {
+            --primary: #3b82f6; --primary-light: #60a5fa; 
+            --bg: #0f172a; --white: #1e293b; --card-bg: #1e293b;
+            --text: #f8fafc; --text-muted: #94a3b8;
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+            --nav-bg: rgba(30, 41, 59, 0.85);
+            --border-light: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
+        
+        /* خريطة OSM */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
+        
+        /* فلتر يجعل الخريطة داكنة في الوضع الليلي */
+        body.dark-mode #map { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+
+        /* شريط الترحيب */
         .welcome-bar {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            z-index: 1000; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             padding: 10px 25px; border-radius: 50px; box-shadow: var(--shadow-md);
-            font-weight: 800; color: var(--primary); display: none; align-items: center; gap: 10px;
-            font-size: 0.95rem; white-space: nowrap; border: 1px solid rgba(255,255,255,0.8);
-            animation: slideDown 0.5s var(--spring);
+            font-weight: 800; color: var(--text); display: none; align-items: center; gap: 10px;
+            font-size: 0.95rem; white-space: nowrap; border: 1px solid var(--border-light);
+            animation: slideDown 0.5s var(--spring); transition: 0.3s;
         }
         @keyframes slideDown { from { top: -50px; } to { top: 20px; } }
 
-        .locate-btn {
-            position: absolute; bottom: 100px; right: 20px; z-index: 1000;
-            background: var(--white); color: var(--primary); width: 52px; height: 52px; border-radius: 50%;
+        /* أزرار التحكم بالخريطة */
+        .map-controls { position: absolute; bottom: 170px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        
+        .control-btn {
+            background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%;
             border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring);
         }
-        .locate-btn:active { transform: scale(0.85); }
+        .control-btn:active { transform: scale(0.85); }
 
+        /* شريط التنقل السفلي */
         .bottom-nav {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 400px; height: 68px; background: rgba(255, 255, 255, 0.85);
+            width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px;
             box-shadow: var(--shadow-lg); display: flex; justify-content: space-around; align-items: center;
-            border: 1px solid rgba(255,255,255,0.6); padding: 0 10px;
+            border: 1px solid var(--border-light); padding: 0 10px; transition: 0.3s;
         }
         .nav-item {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -60,10 +84,11 @@
         .nav-item.active i { transform: translateY(-3px) scale(1.1); }
         .nav-item.test-driver { color: var(--danger); }
 
+        /* القائمة السفلية */
         .bottom-sheet {
             position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%;
             background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.15); transition: bottom 0.4s var(--spring);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2); transition: bottom 0.4s var(--spring), background 0.3s;
             display: flex; flex-direction: column;
         }
         .bottom-sheet.open { bottom: 0; }
@@ -71,16 +96,16 @@
         .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
         .sheet-header { padding: 10px 25px 15px; display: flex; justify-content: space-between; align-items: center; }
         .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
-        .close-btn { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+        .close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
 
         .filter-box { padding: 0 25px 15px; }
-        .filter-box select { width: 100%; padding: 12px 15px; border-radius: 14px; border: 2px solid #e2e8f0; font-family: 'Cairo'; font-weight: 700; color: var(--primary); outline: none; background: #f8fafc; appearance: none; }
+        .filter-box select { width: 100%; padding: 12px 15px; border-radius: 14px; border: 2px solid var(--border-light); font-family: 'Cairo'; font-weight: 700; color: var(--text); outline: none; background: var(--bg); appearance: none; transition: 0.3s; }
 
         .list-container { padding: 0 20px 100px 20px; overflow-y: auto; flex: 1; }
         .list-container::-webkit-scrollbar { display: none; }
 
         /* كرت السائق */
-        .driver-card { background: var(--white); border: 1px solid #f1f5f9; border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); transition: 0.2s; }
+        .driver-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); transition: 0.2s; }
         .driver-card:active { transform: scale(0.98); }
         .driver-avatar { width: 45px; height: 45px; background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-left: 15px; }
         .driver-info { flex: 1; }
@@ -89,21 +114,21 @@
         
         .book-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 0.9rem; transition: 0.3s; box-shadow: 0 4px 10px rgba(30,58,138,0.2); }
         .book-btn:active { transform: scale(0.9); }
-        .book-btn:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+        .book-btn:disabled { background: #475569; color: #94a3b8; box-shadow: none; cursor: not-allowed; }
 
         /* Skeleton Loader */
-        .skeleton-card { background: #f1f5f9; border-radius: 20px; height: 85px; margin-bottom: 12px; animation: shimmer 1.5s infinite linear; background-image: linear-gradient(to right, #f1f5f9 0%, #e2e8f0 20%, #f1f5f9 40%, #f1f5f9 100%); background-size: 800px 100%; }
+        .skeleton-card { background: var(--border-light); border-radius: 20px; height: 85px; margin-bottom: 12px; animation: shimmer 1.5s infinite linear; background-image: linear-gradient(to right, var(--border-light) 0%, var(--bg) 20%, var(--border-light) 40%, var(--border-light) 100%); background-size: 800px 100%; }
         @keyframes shimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
 
         /* Toasts */
         #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
-        .toast { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
+        .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast.success { border-right-color: var(--success); }
         .toast.error { border-right-color: var(--danger); }
 
         /* Modal */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--white); padding: 30px 25px; border-radius: 30px; width: 100%; max-width: 360px; text-align: center; transform: scale(0.8); transition: 0.4s var(--spring); }
         .modal.show .modal-content { transform: scale(1); }
         .modal-icon { width: 70px; height: 70px; background: rgba(16,185,129,0.1); color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 15px; }
@@ -111,11 +136,11 @@
         .modal-content p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 25px; font-weight: 600; }
         .modal-content button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 16px; font-weight: 800; font-family: 'Cairo'; font-size: 1rem; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(30,58,138,0.3); transition: 0.2s; }
         .modal-content button:active { transform: scale(0.95); }
-        .modal-content .btn-cancel { background: #f1f5f9; color: var(--text-muted); box-shadow: none; }
+        .modal-content .btn-cancel { background: var(--bg); color: var(--text-muted); box-shadow: none; }
 
         /* حالة فارغة */
         .empty-state { text-align: center; margin-top: 50px; }
-        .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 15px; }
+        .empty-state i { font-size: 4rem; color: var(--text-muted); margin-bottom: 15px; opacity: 0.5; }
         .empty-state p { color: var(--text-muted); font-weight: 800; font-size: 1.1rem; }
     </style>
 </head>
@@ -127,7 +152,11 @@
         <i class="fas fa-user-graduate" style="color: var(--accent);"></i> أهلاً، <span id="stdNameDisplay"></span>
     </div>
 
-    <button class="locate-btn" onclick="locateStudent()"><i class="fas fa-crosshairs"></i></button>
+    <!-- أزرار التحكم في الخريطة (تحديد الموقع + الوضع الليلي) -->
+    <div class="map-controls">
+        <button class="control-btn" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        <button class="control-btn" onclick="locateStudent()"><i class="fas fa-crosshairs"></i></button>
+    </div>
 
     <div class="bottom-sheet" id="mainSheet">
         <div class="drag-handle"></div>
@@ -161,24 +190,32 @@
     <div id="toastContainer"></div>
 
     <script>
-        // 1. خريطة CartoDB Voyager (أجمل وأوضح)
+        // --- إعداد الوضع الليلي ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+
+        // --- خريطة OSM ---
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 20
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
-        // أيقونات متحركة
-        const busIcon = L.divIcon({ 
-            className: 'custom-bus-icon', 
-            html: '<div class="bus-pulse" style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:14px;"></i></div>', 
-            iconSize: [36, 36], iconAnchor: [18, 18] 
-        });
-        const userIcon = L.divIcon({ 
-            className: 'user-icon', 
-            html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', 
-            iconSize: [22, 22], iconAnchor: [11, 11] 
-        });
+        const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+        const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
         let userMarker = null, studentLocation = null, selectedDriverPhone = null, allDrivers = [];
         
@@ -209,7 +246,7 @@
 
         function locateStudent() {
             if (!navigator.geolocation) return showToast("جهازك لا يدعم تحديد الموقع", "error");
-            const btn = document.querySelector('.locate-btn i');
+            const btn = document.querySelectorAll('.control-btn')[1].querySelector('i');
             btn.className = 'fas fa-circle-notch fa-spin';
 
             navigator.geolocation.getCurrentPosition(
@@ -240,7 +277,6 @@
             document.getElementById('areaFilterBox').style.display = 'block';
             document.getElementById('mainSheet').classList.add('open');
             
-            // Skeleton Loader
             document.getElementById('listContainer').innerHTML = Array(3).fill('<div class="skeleton-card"></div>').join('');
             
             const { data } = await sb.from('routes').select('*').eq('active', true);
@@ -283,9 +319,9 @@
             if (!data || data.length === 0) return list.innerHTML = '<div class="empty-state"><i class="fas fa-ticket-alt"></i><p>ليس لديك أي حجوزات سابقة</p></div>';
 
             list.innerHTML = data.map(b => {
-                let sText = "قيد الانتظار", sClass = "status-pending", sColor = "#d97706";
-                if (b.status === 'accepted') { sText = "مقبول"; sClass = "status-accepted"; sColor = "#059669"; }
-                if (b.status === 'rejected') { sText = "مرفوض"; sClass = "status-rejected"; sColor = "#dc2626"; }
+                let sText = "قيد الانتظار", sColor = "#d97706";
+                if (b.status === 'accepted') { sText = "مقبول"; sColor = "#059669"; }
+                if (b.status === 'rejected') { sText = "مرفوض"; sColor = "#dc2626"; }
                 return `
                 <div class="driver-card" style="flex-direction: column; align-items: flex-start; gap:10px;">
                     <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
