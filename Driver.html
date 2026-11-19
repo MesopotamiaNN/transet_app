@@ -11,14 +11,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     :root { 
-        /* الوضع النهاري */
         --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6; --success: #10b981; --danger: #ef4444; 
         --bg: #f0f4ff; --white: #ffffff; --card-bg: #ffffff; --text: #1f2937; --text-muted: #64748b; 
         --border-light: #e2e8f0; --input-bg: #f8fafc; --nav-bg: rgba(255, 255, 255, 0.85);
         --shadow-lg: 0 20px 40px rgba(0,0,0,0.15); --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     }
-    
-    /* الوضع الليلي */
     body.dark-mode { 
         --primary: #3b82f6; --primary-light: #60a5fa; 
         --bg: #0f172a; --white: #1e293b; --card-bg: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; 
@@ -40,42 +37,20 @@
     .btn-main { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 900; font-family: 'Cairo'; cursor: pointer; margin-top: 10px; box-shadow: 0 6px 20px rgba(30,58,138,0.3); transition: 0.2s; }
     .btn-main:active { transform: scale(0.95); }
 
-    /* زر الوضع الليلي في شاشة التسجيل */
     .setup-theme-btn { position: absolute; top: 20px; left: 20px; background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
     /* الخريطة */
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
     body.dark-mode #map { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
-    /* أزرار التحكم بالخريطة */
     .map-controls { position: absolute; bottom: 170px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
     .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
     .control-btn:active { transform: scale(0.85); }
 
-    /* شريط التنقل */
-    .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px; box-shadow: var(--shadow-lg); display: none; justify-content: space-around; align-items: center; border: 1px solid var(--border-light); padding: 0 10px; transition: 0.3s; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.75rem; font-weight: 800; cursor: pointer; width: 33%; height: 100%; transition: 0.3s var(--spring); }
-    .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
-    .nav-item.active { color: var(--primary); }
-    .nav-item.end-trip { color: var(--danger); }
-
-    .bottom-sheet { position: absolute; bottom: -100%; left: 0; width: 100%; height: 70%; background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; transition: bottom 0.4s var(--spring), background 0.3s; display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
-    .bottom-sheet.open { bottom: 0; }
-    .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
-    .sheet-header { padding: 10px 25px 15px; display: flex; justify-content: space-between; align-items: center; }
-    .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
-    .close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
-    .list-container { padding: 0 20px 100px 20px; overflow-y: auto; flex: 1; }
-    .list-container::-webkit-scrollbar { display: none; }
-
-    .booking-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .booking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .booking-header h4 { color: var(--text); font-size: 1.1rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
-    .booking-actions { display: flex; gap: 10px; }
-    .btn-accept { flex: 1; background: var(--success); color: white; border: none; padding: 12px; border-radius: 14px; font-weight: 800; font-family: 'Cairo'; transition: 0.2s; box-shadow: 0 4px 10px rgba(16,185,129,0.3); }
-    .btn-accept:active { transform: scale(0.95); }
-    .btn-reject { flex: 1; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; padding: 12px; border-radius: 14px; font-weight: 800; font-family: 'Cairo'; transition: 0.2s; }
-    .btn-reject:active { transform: scale(0.95); }
+    /* شريط التنقل (أصبح زر إنهاء فقط) */
+    .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px; box-shadow: var(--shadow-lg); display: none; justify-content: center; align-items: center; border: 1px solid var(--border-light); padding: 0 10px; transition: 0.3s; }
+    .nav-item { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--danger); font-size: 1rem; font-weight: 900; cursor: pointer; width: 100%; height: 100%; transition: 0.3s var(--spring); }
+    .nav-item i { font-size: 1.4rem; }
 
     /* حالة الرحلة الحية */
     .status-badge { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: var(--nav-bg); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 50px; font-weight: 900; display: none; align-items: center; gap: 10px; font-size: 0.9rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border-light); color: var(--text); transition: 0.3s; }
@@ -88,11 +63,6 @@
     .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.error { border-right-color: var(--danger); }
-    .toast.new-booking { border-right-color: var(--accent); }
-
-    .empty-state { text-align: center; margin-top: 50px; }
-    .empty-state i { font-size: 4rem; color: var(--text-muted); margin-bottom: 15px; opacity: 0.5; }
-    .empty-state p { color: var(--text-muted); font-weight: 800; font-size: 1.1rem; }
 </style>
 </head>
 <body>
@@ -103,7 +73,7 @@
             <h2>تسجيل السائق</h2>
             <div class="field"><label>الاسم الكامل</label><input id="fName" placeholder="مثال: أحمد علي"></div>
             <div class="field"><label>رقم الهاتف</label><input id="fPhone" type="tel" placeholder="07XXXXXXXXX"></div>
-            <div class="field"><label>المنطقة / الخط</label><input id="fArea" placeholder="مثال: اليرموك"></div>
+            <div class="field"><label>المناطق التي تمر بها</label><input id="fArea" placeholder="مثال: اليرموك، الحرية، زيونة"></div>
             <div class="field"><label>نوع السيارة</label><input id="fCar" placeholder="مثال: كيا باص"></div>
             <div style="display:flex; gap:10px;">
                 <div class="field" style="flex:1;"><label>المقاعد</label><input id="fSeats" type="number" value="4"></div>
@@ -120,33 +90,17 @@
         <div class="radar-dot"></div> <span id="statusText">أنت متصل (مباشر)</span>
     </div>
 
-    <!-- أزرار التحكم بالخريطة للسائق -->
     <div class="map-controls" id="driverMapControls">
         <button class="control-btn" id="themeToggleDriver" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </div>
 
-    <div class="bottom-sheet" id="mainSheet">
-        <div class="drag-handle"></div>
-        <div class="sheet-header">
-            <h2>طلبات الحجز</h2>
-            <button class="close-btn" onclick="closeSheet()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="list-container" id="bookingsList"></div>
-    </div>
-
     <div class="bottom-nav" id="driverNav">
-        <div class="nav-item active" onclick="closeSheet()"><i class="fas fa-map-marked-alt"></i> الخريطة</div>
-        <div class="nav-item" onclick="openBookings()" style="position:relative;">
-            <i class="fas fa-bell"></i> الحجوزات 
-            <span id="notifDot" style="display:none; background:var(--danger); width:10px; height:10px; border-radius:50%; position:absolute; top:15px; right:25px; border:2px solid white;"></span>
-        </div>
-        <div class="nav-item end-trip" onclick="stopTrip()"><i class="fas fa-power-off"></i> إنهاء</div>
+        <div class="nav-item" onclick="stopTrip()"><i class="fas fa-power-off"></i> إنهاء الرحلة</div>
     </div>
 
     <div id="toastContainer"></div>
 
     <script>
-        // --- إعداد الوضع الليلي ---
         function updateThemeIcons() {
             const isDark = document.body.classList.contains('dark-mode');
             const icon = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
@@ -154,33 +108,22 @@
             if(document.getElementById('themeToggleDriver')) document.getElementById('themeToggleDriver').innerHTML = icon;
         }
         
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
-        }
+        if (localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); }
         updateThemeIcons();
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
-            if (document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
             updateThemeIcons();
         }
 
-        // --- خريطة OSM ---
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:18px;"></i></div>', iconSize: [40, 40], iconAnchor: [20, 20] });
-        const studentIcon = L.divIcon({ className: 'custom-student-icon', html: '<div style="background:#8b5cf6; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-user-graduate" style="font-size:16px;"></i></div>', iconSize: [35, 35], iconAnchor: [17, 17] });
 
         let driver = null, watchId = null, myMarker = null;
-        const studentMarkers = {};
 
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
@@ -189,7 +132,7 @@
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : (type === 'new-booking' ? 'fa-bell' : 'fa-check-circle')}" style="color:${type === 'error' ? 'var(--danger)' : (type === 'new-booking' ? 'var(--accent)' : 'var(--success)')}; font-size:1.2rem;"></i> <span>${message}</span>`;
+            toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}" style="color:${type === 'error' ? 'var(--danger)' : 'var(--success)'}; font-size:1.2rem;"></i> <span>${message}</span>`;
             document.getElementById('toastContainer').appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
@@ -204,13 +147,17 @@
             const price = parseInt(document.getElementById('fPrice').value) || 0;
             const time = document.getElementById('fTime').value.trim();
 
-            if (!name || !phone || !area) return showToast('الاسم والهاتف والمنطقة مطلوبة', 'error');
+            if (!name || !phone || !area) return showToast('الاسم والهاتف والمناطق مطلوبة', 'error');
 
             driver = { name, phone, area, car, seats, price, time };
             localStorage.setItem('driver', JSON.stringify(driver));
 
             try {
-                const { error } = await sb.from('routes').upsert({ driver_phone: phone, driver_name: name, car, area, total_seats: seats, available_seats: seats, price, time, active: true }, { onConflict: 'driver_phone' });
+                // حفظ أو تحديث بيانات السائق
+                const { error } = await sb.from('routes').upsert({ 
+                    driver_phone: phone, driver_name: name, car, area, 
+                    total_seats: seats, available_seats: seats, price, time, active: true 
+                }, { onConflict: 'driver_phone' });
                 if (error) throw error;
             } catch (err) { showToast('فشل الاتصال بقاعدة البيانات', 'error'); }
             
@@ -224,11 +171,7 @@
             document.getElementById('statusBadge').style.display = 'flex';
             setTimeout(() => map.invalidateSize(), 200);
             startTrip();
-            listenToBookings();
         }
-
-        function closeSheet() { document.getElementById('mainSheet').classList.remove('open'); }
-        function openBookings() { document.getElementById('mainSheet').classList.add('open'); document.getElementById('notifDot').style.display = 'none'; }
 
         function startTrip() {
             if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
@@ -261,52 +204,6 @@
         }
 
         function onError(err) { showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); }
-
-        async function listenToBookings() {
-            loadBookings();
-            sb.channel('driver_bookings').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `driver_phone=eq.${driver.phone}` }, payload => {
-                showToast('وصلك طلب حجز جديد!', 'new-booking');
-                document.getElementById('notifDot').style.display = 'block';
-                loadBookings();
-            }).subscribe();
-        }
-
-        async function loadBookings() {
-            const { data } = await sb.from('bookings').select('*').eq('driver_phone', driver.phone).eq('status', 'pending');
-            const list = document.getElementById('bookingsList');
-            if (!data || data.length === 0) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success);"></i><p>لا توجد طلبات جديدة حالياً</p></div>';
-                return;
-            }
-            list.innerHTML = data.map(b => `
-                <div class="booking-card" id="book_${b.id}">
-                    <div class="booking-header">
-                        <h4><i class="fas fa-user-graduate" style="color:var(--accent);"></i> ${b.student_name}</h4>
-                    </div>
-                    <div class="booking-actions">
-                        <button class="btn-accept" onclick="handleBooking('${b.id}', 'accepted', ${b.student_lat}, ${b.student_lng}, '${b.student_name}')">قبول</button>
-                        <button class="btn-reject" onclick="handleBooking('${b.id}', 'rejected')">رفض</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function handleBooking(id, status, sLat, sLng, sName) {
-            await sb.from('bookings').update({ status: status }).eq('id', id);
-            document.getElementById(`book_${id}`).remove();
-            
-            if (status === 'accepted') {
-                showToast('تم قبول الطالب بنجاح');
-                const { data: route } = await sb.from('routes').select('available_seats').eq('driver_phone', driver.phone).single();
-                if (route && route.available_seats > 0) await sb.from('routes').update({ available_seats: route.available_seats - 1 }).eq('driver_phone', driver.phone);
-                
-                if (sLat && sLng) {
-                    if (studentMarkers[id]) map.removeLayer(studentMarkers[id]);
-                    studentMarkers[id] = L.marker([sLat, sLng], { icon: studentIcon }).addTo(map).bindPopup(`<b>الطالب: ${sName}</b>`);
-                    map.flyTo([sLat, sLng], 15, { animate: true, duration: 1.5 });
-                }
-            } else { showToast('تم رفض الطلب', 'error'); }
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('driver');
