@@ -11,12 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body, html { height: 100%; overflow: hidden; background: #f0f4ff; }
+        body, html { height: 100%; overflow: hidden; background: #e5e7eb; }
         
-        /* الخريطة كاملة الشاشة */
+        /* تأكيد ظهور الخريطة */
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* زر فتح القائمة */
         .fab-btn {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             z-index: 1000; background: #1e3a8a; color: white;
@@ -25,7 +24,6 @@
             display: flex; align-items: center; gap: 10px;
         }
 
-        /* القائمة السفلية (Bottom Sheet) */
         .bottom-sheet {
             position: absolute; bottom: -100%; left: 0; width: 100%; height: 60%;
             background: white; z-index: 2000; border-radius: 25px 25px 0 0;
@@ -52,7 +50,6 @@
         }
         .book-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-        /* نافذة تأكيد الحجز */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; }
         .modal-content h3 { color: #1e3a8a; margin-bottom: 10px; }
@@ -62,26 +59,22 @@
 </head>
 <body>
 
-    <!-- الخريطة كاملة الشاشة -->
     <div id="map"></div>
 
-    <!-- زر عرض السائقين -->
     <button class="fab-btn" onclick="toggleSheet()">
         <i class="fas fa-list"></i> عرض السائقين
     </button>
 
-    <!-- القائمة السفلية -->
     <div class="bottom-sheet" id="driverSheet">
         <div class="sheet-header">
             <h2><i class="fas fa-bus"></i> السائقون المتاحون</h2>
             <button class="close-btn" onclick="toggleSheet()"><i class="fas fa-times"></i></button>
         </div>
         <div class="drivers-list" id="driversList">
-            <!-- سيتم تعبئتها ديناميكياً -->
+            <p style="text-align:center; color:#666; margin-top:20px;">جاري التحميل...</p>
         </div>
     </div>
 
-    <!-- نافذة تأكيد الحجز -->
     <div class="modal" id="bookingModal">
         <div class="modal-content">
             <h3><i class="fas fa-ticket-alt"></i> تأكيد الحجز</h3>
@@ -91,23 +84,12 @@
     </div>
 
     <script>
-        const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
-        const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // سيتم جلب بيانات الطالب من نظام الجامعة لاحقاً
-        // للتجربة، نضع رقم تسجيل وهمي
-        const STUDENT = { id: "2023-1234", name: "طالب تجريبي" }; 
-
-        let routesData = [];
-        let selectedDriverPhone = null;
-        let studentLocation = null;
-        const busMarkers = {};
-
-        // إعداد الخريطة
+        // ═══════════════════════════════════════════════════════
+        // 1. إعداد الخريطة أولاً (حتى لو فشل الاتصال بقاعدة البيانات)
+        // ═══════════════════════════════════════════════════════
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.control.zoom({ position: 'topright' }).addTo(map); // زر التكبير عاليمين
+        L.control.zoom({ position: 'topright' }).addTo(map);
         L.marker([33.2765, 44.3380]).addTo(map).bindPopup("<b>جامعة الناجي</b>");
 
         const busIcon = L.divIcon({
@@ -116,25 +98,39 @@
             iconSize: [35, 35], iconAnchor: [17, 17]
         });
 
-        // فتح وإغلاق القائمة
+        // ═══════════════════════════════════════════════════════
+        // 2. إعداد Supabase
+        // ═══════════════════════════════════════════════════════
+        const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
+        const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
+        
+        let sb = null;
+        let studentLocation = null;
+        let selectedDriverPhone = null;
+
+        try {
+            sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (e) {
+            console.error("خطأ في Supabase:", e);
+            document.getElementById('driversList').innerHTML = '<p style="color:red; text-align:center;">لم يتم ربط قاعدة البيانات. تأكد من مفاتيح Supabase.</p>';
+        }
+
         function toggleSheet() {
             document.getElementById('driverSheet').classList.toggle('open');
         }
 
-        // جلب السائقين وعرضهم في القائمة
+        // 3. جلب السائقين
         async function loadDrivers() {
+            if(!sb) return;
             const { data, error } = await sb.from('routes').select('*').eq('active', true);
-            if (error) return console.error(error);
-            
-            routesData = data || [];
             const list = document.getElementById('driversList');
             
-            if (routesData.length === 0) {
+            if (error || !data || data.length === 0) {
                 list.innerHTML = '<p style="text-align:center; color:#666;">لا يوجد سائقون متاحون حالياً.</p>';
                 return;
             }
 
-            list.innerHTML = routesData.map(route => `
+            list.innerHTML = data.map(route => `
                 <div class="driver-card">
                     <div class="driver-info">
                         <h3><i class="fas fa-user-tie"></i> ${route.driver_name}</h3>
@@ -147,13 +143,12 @@
             `).join('');
         }
 
-        // فتح نافذة الحجز وجلب موقع الطالب
+        // 4. الحجز
         function openModal(phone, area) {
             selectedDriverPhone = phone;
             document.getElementById('modalArea').textContent = area;
             document.getElementById('bookingModal').style.display = 'flex';
             
-            // جلب موقع الطالب
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     pos => { studentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
@@ -162,28 +157,27 @@
             }
         }
 
-        // تأكيد الحجز (إرسال البيانات لقاعدة البيانات)
         async function confirmBooking() {
             document.getElementById('bookingModal').style.display = 'none';
+            if(!sb) return alert("قاعدة البيانات غير مربوطة");
 
             const { error } = await sb.from('bookings').insert([{
                 driver_phone: selectedDriverPhone,
-                student_id: STUDENT.id, // رقم تسجيل الطالب من الجامعة
-                student_name: STUDENT.name,
+                student_id: "2023-XXXX", // ضع رقم الطالب هنا
+                student_name: "طالب",    // ضع اسم الطالب هنا
                 student_lat: studentLocation ? studentLocation.lat : null,
                 student_lng: studentLocation ? studentLocation.lng : null,
                 status: 'pending'
             }]);
 
-            if (error) {
-                alert('حدث خطأ أثناء الحجز: ' + error.message);
-            } else {
-                alert('✅ تم إرسال طلب الحجز بنجاح! انتظر موافقة السائق.');
-            }
+            if (error) alert('حدث خطأ: ' + error.message);
+            else alert('✅ تم إرسال طلب الحجز بنجاح!');
         }
 
-        // التتبع الحي للسائقين
+        // 5. التتبع الحي
+        const busMarkers = {};
         async function loadLiveBuses() {
+            if(!sb) return;
             const { data } = await sb.from('live_buses').select('*');
             (data || []).forEach(drawBus);
 
@@ -208,7 +202,6 @@
             }
         }
 
-        // التشغيل
         document.addEventListener('DOMContentLoaded', () => {
             loadDrivers();
             loadLiveBuses();
