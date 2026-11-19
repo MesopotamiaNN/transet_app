@@ -12,44 +12,54 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body, html { height: 100%; overflow: hidden; background: #e5e7eb; }
+        
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* شريط ترحيبي */
+        /* شريط الترحيب */
         .welcome-bar {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; background: white; padding: 10px 20px; border-radius: 50px;
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; background: white; padding: 8px 20px; border-radius: 50px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-weight: 900; color: #1e3a8a;
-            display: flex; align-items: center; gap: 10px; white-space: nowrap;
+            display: flex; align-items: center; gap: 8px; font-size: 0.9rem; white-space: nowrap;
         }
 
-        .locate-btn {
-            position: absolute; bottom: 100px; right: 20px; z-index: 1000;
-            background: white; color: #1e3a8a; width: 50px; height: 50px; border-radius: 50%;
-            border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 1.2rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+        /* شريط التنقل السفلي */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 70px;
+            background: white; z-index: 2000; box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); /* لدعم آيفون */
         }
-
-        .fab-btn {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; background: #1e3a8a; color: white;
-            padding: 12px 25px; border-radius: 50px; font-weight: 900; font-size: 1rem;
-            box-shadow: 0 10px 25px rgba(30,58,138,0.4); border: none; cursor: pointer;
-            display: flex; align-items: center; gap: 10px;
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #64748b; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+            width: 25%; height: 100%; transition: 0.2s;
         }
+        .nav-item i { font-size: 1.3rem; margin-bottom: 3px; }
+        .nav-item.active { color: #1e3a8a; }
+        .nav-item.test-driver { color: #ef4444; } /* لون مميز لزر التجربة */
 
+        /* القائمة السفلية (Bottom Sheet) */
         .bottom-sheet {
-            position: absolute; bottom: -100%; left: 0; width: 100%; height: 60%;
-            background: white; z-index: 2000; border-radius: 25px 25px 0 0;
+            position: absolute; bottom: -120%; left: 0; width: 100%; height: 65%;
+            background: white; z-index: 1500; border-radius: 25px 25px 0 0;
             box-shadow: 0 -10px 30px rgba(0,0,0,0.1); transition: bottom 0.3s ease-in-out;
             display: flex; flex-direction: column;
         }
-        .bottom-sheet.open { bottom: 0; }
+        .bottom-sheet.open { bottom: 70px; } /* يرتفع فوق شريط التنقل */
         
         .sheet-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .sheet-header h2 { font-size: 1.2rem; color: #1e3a8a; font-weight: 900; }
+        .sheet-header h2 { font-size: 1.1rem; color: #1e3a8a; font-weight: 900; }
         .close-btn { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; color: #333; }
 
-        .drivers-list { padding: 15px; overflow-y: auto; flex: 1; }
+        /* فلتر المناطق */
+        .filter-box { padding: 10px 15px; background: #f8fafc; border-bottom: 1px solid #eee; }
+        .filter-box select {
+            width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1;
+            font-family: 'Cairo'; font-weight: 700; color: #1e3a8a; outline: none;
+        }
+
+        .list-container { padding: 15px; overflow-y: auto; flex: 1; }
         .driver-card {
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px;
             padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
@@ -63,45 +73,73 @@
         }
         .book-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
 
+        /* حالات الحجز */
+        .status-badge { padding: 5px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-accepted { background: #d1fae5; color: #059669; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+
+        /* نافذة تأكيد الحجز */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; }
         .modal-content h3 { color: #1e3a8a; margin-bottom: 10px; }
         .modal-content p { font-size: 0.9rem; color: #64748b; margin-bottom: 20px; }
-        .modal-content button { width: 100%; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-weight: bold; font-family: 'Cairo'; cursor: pointer; }
+        .modal-content button { width: 100%; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-weight: bold; font-family: 'Cairo'; cursor: pointer; margin-bottom: 10px;}
+        .modal-content .btn-cancel { background: #e2e8f0; color: #333; }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
 
-    <!-- شريط يظهر اسم الطالب بمجرد دخوله -->
     <div class="welcome-bar" id="welcomeBar" style="display: none;">
         <i class="fas fa-user-graduate"></i> أهلاً، <span id="stdNameDisplay"></span>
     </div>
 
-    <button class="locate-btn" onclick="locateStudent()">
-        <i class="fas fa-crosshairs"></i>
-    </button>
-
-    <button class="fab-btn" onclick="toggleSheet()">
-        <i class="fas fa-list"></i> عرض السائقين
-    </button>
-
-    <div class="bottom-sheet" id="driverSheet">
+    <!-- القائمة السفلية المشتركة (للسائقين أو الحجوزات) -->
+    <div class="bottom-sheet" id="mainSheet">
         <div class="sheet-header">
-            <h2><i class="fas fa-bus"></i> السائقون المتاحون</h2>
-            <button class="close-btn" onclick="toggleSheet()"><i class="fas fa-times"></i></button>
+            <h2 id="sheetTitle"><i class="fas fa-bus"></i> السائقون المتاحون</h2>
+            <button class="close-btn" onclick="closeSheet()"><i class="fas fa-times"></i></button>
         </div>
-        <div class="drivers-list" id="driversList">
+        
+        <!-- فلتر المناطق (يظهر فقط في قسم السائقين) -->
+        <div class="filter-box" id="areaFilterBox">
+            <select id="areaSelect" onchange="renderDrivers()">
+                <option value="all">كل المناطق</option>
+                <!-- سيتم تعبئتها ديناميكياً -->
+            </select>
+        </div>
+
+        <div class="list-container" id="listContainer">
             <p style="text-align:center; color:#666; margin-top:20px;">جاري التحميل...</p>
         </div>
     </div>
 
+    <!-- شريط التنقل السفلي -->
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-map" onclick="closeSheet()">
+            <i class="fas fa-map"></i> الخريطة
+        </div>
+        <div class="nav-item" id="nav-drivers" onclick="openDriversList()">
+            <i class="fas fa-bus"></i> السائقين
+        </div>
+        <div class="nav-item" id="nav-bookings" onclick="openMyBookings()">
+            <i class="fas fa-ticket-alt"></i> حجوزاتي
+        </div>
+        <!-- زر تجربة السائق -->
+        <div class="nav-item test-driver" onclick="window.location.href='Driver.html'">
+            <i class="fas fa-user-tie"></i> تجربة
+        </div>
+    </div>
+
+    <!-- نافذة تأكيد الحجز -->
     <div class="modal" id="bookingModal">
         <div class="modal-content">
             <h3><i class="fas fa-ticket-alt"></i> تأكيد الحجز</h3>
             <p>خط: <span id="modalArea"></span><br>سيتم إرسال طلبك للسائق.</p>
             <button onclick="confirmBooking()">تأكيد وإرسال الموقع</button>
+            <button class="btn-cancel" onclick="document.getElementById('bookingModal').style.display='none'">إلغاء</button>
         </div>
     </div>
 
@@ -126,40 +164,31 @@
         let userMarker = null;
         let studentLocation = null;
         let selectedDriverPhone = null;
-        let currentStudent = null; // سيحفظ بيانات الطالب
+        let currentStudent = null;
+        let allDrivers = []; // لحفظ السائقين للفلترة
 
-        // 2. إعداد Supabase
+        // 2. إعداد Supabase (ضع المفاتيح هنا)
         const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
         const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 3. جلب بيانات الطالب من رابط الصفحة
+        // 3. جلب بيانات الطالب
         async function loadStudentData() {
-            // قراءة رقم التسجيل من الرابط (مثلاً: index.html?reg_id=1001)
             const urlParams = new URLSearchParams(window.location.search);
             const regId = urlParams.get('reg_id');
+            if (!regId) return; // تجاهل إذا لم يوجد
 
-            if (!regId) {
-                alert("خطأ: لم يتم العثور على رقم تسجيل الطالب في الرابط!");
-                return;
-            }
-
-            // جلب الاسم من جدول students
             const { data, error } = await sb.from('students').select('*').eq('reg_id', regId).single();
-            
-            if (error || !data) {
-                alert("خطأ: رقم التسجيل غير موجود في قاعدة البيانات.");
-                return;
+            if (data) {
+                currentStudent = data;
+                document.getElementById('stdNameDisplay').textContent = data.name;
+                document.getElementById('welcomeBar').style.display = 'flex';
             }
-
-            currentStudent = data;
-            document.getElementById('stdNameDisplay').textContent = data.name;
-            document.getElementById('welcomeBar').style.display = 'flex';
         }
 
-        // 4. دالة تحديد الموقع
+        // 4. تحديد الموقع
         function locateStudent() {
-            if (!navigator.geolocation) return alert("جهازك لا يدعم تحديد الموقع");
+            if (!navigator.geolocation) return;
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const lat = pos.coords.latitude;
@@ -167,33 +196,60 @@
                     studentLocation = { lat, lng };
                     if (userMarker) userMarker.setLatLng([lat, lng]);
                     else userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map).bindPopup("موقعك");
-                    map.flyTo([lat, lng], 16);
+                    // لا نجعلها تطير للموقع فوراً حتى لا تزعج المستخدم، لكن نضع النقطة فقط.
                 },
-                (err) => { alert("تعذر تحديد موقعك. تأكد من تفعيل الـ GPS."); },
+                (err) => { console.log("GPS Error"); },
                 { enableHighAccuracy: true }
             );
         }
 
-        // 5. فتح القائمة
-        function toggleSheet() {
-            document.getElementById('driverSheet').classList.toggle('open');
+        // 5. إدارة الواجهة (شريط التنقل)
+        function setActiveNav(id) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(id !== 'test') document.getElementById(id).classList.add('active');
         }
 
-        // 6. جلب السائقين
-        async function loadDrivers() {
-            const { data, error } = await sb.from('routes').select('*').eq('active', true);
-            const list = document.getElementById('driversList');
+        function closeSheet() {
+            document.getElementById('mainSheet').classList.remove('open');
+            setActiveNav('nav-map');
+        }
+
+        // 6. قسم السائقين
+        async function openDriversList() {
+            setActiveNav('nav-drivers');
+            document.getElementById('sheetTitle').innerHTML = '<i class="fas fa-bus"></i> السائقون المتاحون';
+            document.getElementById('areaFilterBox').style.display = 'block';
+            document.getElementById('mainSheet').classList.add('open');
+            document.getElementById('listContainer').innerHTML = '<p style="text-align:center; color:#666;">جاري التحميل...</p>';
             
-            if (error || !data || data.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#666;">لا يوجد سائقون متاحون حالياً.</p>';
+            // جلب السائقين
+            const { data } = await sb.from('routes').select('*').eq('active', true);
+            allDrivers = data || [];
+            
+            // تعبئة فلتر المناطق
+            const areas = [...new Set(allDrivers.map(d => d.area))];
+            const select = document.getElementById('areaSelect');
+            select.innerHTML = '<option value="all">كل المناطق</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('');
+
+            renderDrivers();
+        }
+
+        function renderDrivers() {
+            const filter = document.getElementById('areaSelect').value;
+            const filtered = filter === 'all' ? allDrivers : allDrivers.filter(d => d.area === filter);
+            const list = document.getElementById('listContainer');
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#666;">لا يوجد سائقون في هذه المنطقة.</p>';
                 return;
             }
 
-            list.innerHTML = data.map(route => `
+            list.innerHTML = filtered.map(route => `
                 <div class="driver-card">
                     <div class="driver-info">
                         <h3><i class="fas fa-user-tie"></i> ${route.driver_name}</h3>
-                        <p><i class="fas fa-car"></i> ${route.car || 'غير محدد'} | <i class="fas fa-users"></i> ${route.available_seats} مقاعد</p>
+                        <p><i class="fas fa-car"></i> ${route.car || 'غير محدد'} | <i class="fas fa-map-marker-alt"></i> ${route.area}</p>
+                        <p><i class="fas fa-users"></i> ${route.available_seats} مقاعد فارغة</p>
                     </div>
                     <button class="book-btn" onclick="openModal('${route.driver_phone}', '${route.area}')" ${route.available_seats <= 0 ? 'disabled' : ''}>
                         ${route.available_seats <= 0 ? 'مكتمل' : 'حجز'}
@@ -202,9 +258,45 @@
             `).join('');
         }
 
-        // 7. الحجز
+        // 7. قسم حجوزاتي
+        async function openMyBookings() {
+            if (!currentStudent) return alert("يرجى تسجيل الدخول أولاً (رقم التسجيل مفقود).");
+            setActiveNav('nav-bookings');
+            document.getElementById('sheetTitle').innerHTML = '<i class="fas fa-ticket-alt"></i> سجل حجوزاتي';
+            document.getElementById('areaFilterBox').style.display = 'none'; // إخفاء الفلتر
+            document.getElementById('mainSheet').classList.add('open');
+            document.getElementById('listContainer').innerHTML = '<p style="text-align:center; color:#666;">جاري التحميل...</p>';
+
+            const { data } = await sb.from('bookings')
+                .select('*, routes(driver_name, area)')
+                .eq('student_reg_id', currentStudent.reg_id)
+                .order('created_at', { ascending: false });
+
+            const list = document.getElementById('listContainer');
+            if (!data || data.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">ليس لديك أي حجوزات سابقة.</p>';
+                return;
+            }
+
+            list.innerHTML = data.map(b => {
+                let statusText = "قيد الانتظار", statusClass = "status-pending";
+                if (b.status === 'accepted') { statusText = "مقبول"; statusClass = "status-accepted"; }
+                if (b.status === 'rejected') { statusText = "مرفوض"; statusClass = "status-rejected"; }
+
+                return `
+                <div class="driver-card" style="flex-direction: column; align-items: flex-start;">
+                    <div style="width:100%; display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <h3 style="font-size:1rem; color:#1e3a8a;">خط ${b.routes?.area || 'غير محدد'}</h3>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <p style="font-size:0.85rem; color:#64748b;">السائق: ${b.routes?.driver_name || 'غير معروف'}</p>
+                    <p style="font-size:0.75rem; color:#94a3b8; margin-top:5px;">تاريخ الطلب: ${new Date(b.created_at).toLocaleString('ar-IQ')}</p>
+                </div>`;
+            }).join('');
+        }
+
+        // 8. إتمام الحجز
         function openModal(phone, area) {
-            if (!currentStudent) return alert("يرجى الدخول من بوابة الجامعة أولاً.");
             selectedDriverPhone = phone;
             document.getElementById('modalArea').textContent = area;
             document.getElementById('bookingModal').style.display = 'flex';
@@ -212,8 +304,8 @@
 
         async function confirmBooking() {
             document.getElementById('bookingModal').style.display = 'none';
+            if (!currentStudent) return alert("خطأ في بيانات الطالب.");
 
-            // إرسال الحجز برقم التسجيل واسم الطالب
             const { error } = await sb.from('bookings').insert([{
                 driver_phone: selectedDriverPhone,
                 student_reg_id: currentStudent.reg_id,
@@ -227,12 +319,11 @@
             else alert('✅ تم إرسال طلب الحجز بنجاح!');
         }
 
-        // 8. التتبع الحي
+        // 9. تتبع الباصات
         const busMarkers = {};
         async function loadLiveBuses() {
             const { data } = await sb.from('live_buses').select('*');
             (data || []).forEach(drawBus);
-
             sb.channel('live_buses_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
                     if (payload.eventType === 'DELETE') {
@@ -256,9 +347,8 @@
 
         // التشغيل
         document.addEventListener('DOMContentLoaded', () => {
-            loadStudentData(); // جلب بيانات الطالب أولاً
+            loadStudentData(); 
             locateStudent();
-            loadDrivers();
             loadLiveBuses();
         });
     </script>
