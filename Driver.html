@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<!-- إعدادات PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1e3a8a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -50,14 +49,14 @@
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
     body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
-    /* شريط التنقل السفلي (Dashboard) */
+    /* شريط التنقل السفلي */
     .bottom-nav { 
         position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
         width: 92%; max-width: 400px; height: 75px; background: var(--nav-bg); 
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; 
         border-radius: 24px; box-shadow: var(--shadow-lg); display: none; 
-        justify-content: space-around; align-items: center; border: 1px solid var(--border-light); 
-        padding: 0 10px; transition: 0.3s; 
+        justify-content: space-between; align-items: center; border: 1px solid var(--border-light); 
+        padding: 0 15px; transition: 0.3s; 
     }
     
     .nav-item { 
@@ -67,43 +66,47 @@
     }
     .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
     .nav-item.active { color: var(--primary); }
-    
-    /* زر البث المباشر */
-    .live-btn-wrapper { position: relative; top: -15px; }
-    .live-btn { 
-        width: 65px; height: 65px; border-radius: 50%; border: 4px solid var(--white); 
-        background: var(--text-muted); color: white; font-size: 1.5rem; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; transition: 0.4s var(--spring);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    }
-    .live-btn.active { background: var(--success); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
-    .live-btn.active i { animation: pulse-icon 1.5s infinite; }
-    @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-    /* القائمة السفلية لإدارة المقاعد */
+    /* زر التشغيل/الإطفاء (Toggle Switch) */
+    .live-toggle-item { flex: 1.5; flex-direction: row; gap: 6px; background: var(--bg); border-radius: 20px; padding: 0 10px; height: 45px; }
+    
+    .toggle-switch {
+        width: 46px; height: 26px; background: #64748b; border-radius: 20px;
+        position: relative; transition: 0.3s; display: flex; align-items: center;
+    }
+    .toggle-switch.active { background: var(--success); }
+    .toggle-knob {
+        width: 22px; height: 22px; background: white; border-radius: 50%;
+        position: absolute; left: 2px; display: flex; align-items: center; justify-content: center;
+        color: #64748b; font-size: 0.6rem; transition: 0.3s var(--spring);
+    }
+    .toggle-switch.active .toggle-knob { left: calc(100% - 24px); color: var(--success); }
+    
+    .live-text { font-size: 0.75rem; font-weight: 900; color: var(--text-muted); transition: 0.3s; }
+    .live-text.active { color: var(--success); }
+
+    /* القائمة السفلية */
     .bottom-sheet { 
-        position: absolute; bottom: -100%; left: 0; width: 100%; height: 50%; 
+        position: absolute; bottom: -100%; left: 0; width: 100%; height: 45%; 
         background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; 
         transition: bottom 0.4s var(--spring); display: flex; flex-direction: column; 
         box-shadow: 0 -10px 40px rgba(0,0,0,0.2); 
     }
-    .bottom-sheet.open { bottom: 0; }
+    /* تم تعديل هذا السطر لتصعد النافذة فوق الشريط السفلي */
+    .bottom-sheet.open { bottom: 105px; } 
+    
     .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
-    .sheet-header { padding: 10px 25px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .sheet-header { padding: 10px 25px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
     .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
     .close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
     
-    .seats-container { padding: 30px 25px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .seats-container { padding: 25px 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .total-seats-info { background: var(--bg); padding: 10px 20px; border-radius: 12px; font-weight: 800; color: var(--text); font-size: 0.9rem; margin-bottom: 10px; }
+    .seat-label { font-size: 0.9rem; color: var(--text-muted); font-weight: 700; }
     .seats-counter { display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 10px; }
-    .seat-btn { 
-        width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--border-light); 
-        background: var(--bg); color: var(--text); font-size: 1.5rem; cursor: pointer; 
-        display: flex; align-items: center; justify-content: center; transition: 0.2s;
-    }
+    .seat-btn { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--border-light); background: var(--bg); color: var(--text); font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .seat-btn:active { transform: scale(0.9); }
     .seat-number { font-size: 3.5rem; font-weight: 900; color: var(--primary); line-height: 1; }
-    .seat-label { font-size: 0.9rem; color: var(--text-muted); font-weight: 700; }
-    .total-seats-info { background: var(--bg); padding: 10px 20px; border-radius: 12px; font-weight: 800; color: var(--text); font-size: 0.9rem; }
 
     .map-controls { position: absolute; bottom: 120px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
     .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
@@ -144,11 +147,15 @@
         <div class="nav-item" onclick="openSeatsSheet()">
             <i class="fas fa-chair"></i> المقاعد
         </div>
-        <div class="nav-item live-btn-wrapper">
-            <div class="live-btn" id="liveBtn" onclick="toggleLive()">
-                <i class="fas fa-power-off"></i>
+        
+        <!-- زر البث الجديد -->
+        <div class="nav-item live-toggle-item" onclick="toggleLive()">
+            <div class="toggle-switch" id="liveToggleSwitch">
+                <div class="toggle-knob"><i class="fas fa-power-off"></i></div>
             </div>
+            <span class="live-text" id="liveToggleText">مغلق</span>
         </div>
+
         <div class="nav-item" onclick="stopTrip()" style="color: var(--danger);">
             <i class="fas fa-sign-out-alt"></i> إنهاء
         </div>
@@ -173,7 +180,6 @@
                 <div class="seat-number" id="displayAvailableSeats">4</div>
                 <button class="seat-btn" onclick="updateSeats(1)"><i class="fas fa-plus"></i></button>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; font-weight: 600;">سيتم تحديث هذا العدد للطلاب فوراً.</p>
         </div>
     </div>
 
@@ -258,6 +264,7 @@
         // إدارة المقاعد
         function openSeatsSheet() { document.getElementById('seatsSheet').classList.add('open'); }
         function closeSeatsSheet() { document.getElementById('seatsSheet').classList.remove('open'); }
+        function closeSheet() { closeSeatsSheet(); }
 
         async function updateSeats(change) {
             let newSeats = currentAvailableSeats + change;
@@ -272,19 +279,25 @@
 
         // إدارة البث المباشر (Live)
         function toggleLive() {
-            const btn = document.getElementById('liveBtn');
+            const toggleSwitch = document.getElementById('liveToggleSwitch');
+            const toggleText = document.getElementById('liveToggleText');
+
             if (!isLive) {
                 if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
                 watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
                 isLive = true;
-                btn.classList.add('active');
-                btn.innerHTML = '<i class="fas fa-satellite-dish"></i>';
+                
+                toggleSwitch.classList.add('active');
+                toggleText.classList.add('active');
+                toggleText.textContent = 'مباشر';
                 showToast('أنت الآن مباشر على الخريطة', 'success');
             } else {
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
                 isLive = false;
-                btn.classList.remove('active');
-                btn.innerHTML = '<i class="fas fa-power-off"></i>';
+                
+                toggleSwitch.classList.remove('active');
+                toggleText.classList.remove('active');
+                toggleText.textContent = 'مغلق';
                 sb.from('live_buses').delete().eq('driver_phone', driver.phone);
                 showToast('تم إيقاف البث المباشر', 'error');
             }
@@ -305,7 +318,7 @@
             else { myMarker.setLatLng([lat, lng]); }
 
             const now = Date.now();
-            if (now - lastSent < 3000) return; // كل 3 ثواني
+            if (now - lastSent < 3000) return;
             lastSent = now;
 
             try {
@@ -317,11 +330,10 @@
 
         function onError(err) { 
             showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); 
-            toggleLive(); // إيقاف البث إذا فشل
+            if(isLive) toggleLive(); 
         }
 
-        // إغلاق القائمة السفلية عند الضغط على الخريطة
-        map.on('click', closeSeatsSheet);
+        map.on('click', closeSheet);
 
         document.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('driver');
