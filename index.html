@@ -46,7 +46,6 @@
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
         body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
-        /* شريط الترحيب والعداد */
         .top-bar {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 1000; display: flex; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;
@@ -70,7 +69,6 @@
         .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
         .control-btn:active { transform: scale(0.85); }
 
-        /* شريط التنقل السفلي */
         .bottom-nav {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg);
@@ -84,7 +82,6 @@
         .nav-item.active i { transform: translateY(-3px) scale(1.1); }
         .nav-item.test-driver { color: var(--danger); }
 
-        /* القائمة السفلية */
         .bottom-sheet {
             position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%;
             background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0;
@@ -98,7 +95,6 @@
         .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
         .close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
 
-        /* مربع البحث */
         .search-box { padding: 0 25px 15px; position: relative; }
         .search-box i { position: absolute; right: 40px; top: 15px; color: var(--text-muted); }
         .search-box input { 
@@ -110,7 +106,6 @@
         .list-container { padding: 0 20px 100px 20px; overflow-y: auto; flex: 1; }
         .list-container::-webkit-scrollbar { display: none; }
 
-        /* بطاقة السائق */
         .driver-card { 
             background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; 
             padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; 
@@ -402,8 +397,15 @@
 
             sb.channel('live_buses_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
-                    fetchLiveBuses(); // تحديث شامل عند أي تغيير (إضافة، تعديل، حذف)
-                }).subscribe();
+                    console.log("🔔 تحديث لحظي وصل:", payload.eventType);
+                    fetchLiveBuses(); // تحديث شامل عند أي إضافة، تعديل، أو حذف
+                })
+                .subscribe((status) => {
+                    console.log("حالة الاتصال اللحظي:", status);
+                    if(status === 'CHANNEL_ERROR') {
+                        showToast("انقطع الاتصال اللحظي، يرجى تحديث الصفحة", "error");
+                    }
+                });
         }
 
         document.addEventListener('DOMContentLoaded', () => {

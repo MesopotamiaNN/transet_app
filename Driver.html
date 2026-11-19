@@ -27,7 +27,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
     body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
     
-    /* شاشة التسجيل */
     #setupScreen { position: absolute; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; transition: 0.3s; }
     .setup-card { background: var(--white); padding: 35px 25px; border-radius: 30px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); position: relative; }
     .setup-card h2 { color: var(--text); text-align: center; margin-bottom: 25px; font-size: 1.5rem; font-weight: 900; }
@@ -40,11 +39,9 @@
 
     .setup-theme-btn { position: absolute; top: 20px; left: 20px; background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* الخريطة */
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
     body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
-    /* شريط التنقل السفلي */
     .bottom-nav { 
         position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
         width: 92%; max-width: 400px; height: 75px; background: var(--nav-bg); 
@@ -62,7 +59,6 @@
     .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
     .nav-item.active { color: var(--primary); }
 
-    /* زر التشغيل/الإطفاء (Toggle Switch) */
     .live-toggle-item { flex: 1.5; flex-direction: row; gap: 6px; background: var(--bg); border-radius: 20px; padding: 0 10px; height: 45px; }
     
     .toggle-switch {
@@ -80,7 +76,6 @@
     .live-text { font-size: 0.75rem; font-weight: 900; color: var(--text-muted); transition: 0.3s; }
     .live-text.active { color: var(--success); }
 
-    /* القائمة السفلية */
     .bottom-sheet { 
         position: absolute; bottom: -100%; left: 0; width: 100%; height: 45%; 
         background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; 
@@ -133,7 +128,6 @@
 
     <div id="map"></div>
     
-    <!-- شريط التحكم السفلي -->
     <div class="bottom-nav" id="driverNav">
         <div class="nav-item" onclick="closeSheet()">
             <i class="fas fa-map-marked-alt"></i> الخريطة
@@ -142,7 +136,6 @@
             <i class="fas fa-chair"></i> المقاعد
         </div>
         
-        <!-- زر البث -->
         <div class="nav-item live-toggle-item" onclick="toggleLive()">
             <div class="toggle-switch" id="liveToggleSwitch">
                 <div class="toggle-knob"><i class="fas fa-power-off"></i></div>
@@ -159,7 +152,6 @@
         <button class="control-btn" id="themeToggleDriver" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </div>
 
-    <!-- نافذة إدارة المقاعد -->
     <div class="bottom-sheet" id="seatsSheet">
         <div class="drag-handle"></div>
         <div class="sheet-header">
@@ -252,8 +244,6 @@
             document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
             
             setTimeout(() => map.invalidateSize(), 200);
-            
-            // تأكد أن السائق يبدأ "مغلقاً" (غير متاح) عند فتح الصفحة
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
         }
 
@@ -271,13 +261,11 @@
             await sb.from('routes').update({ available_seats: currentAvailableSeats }).eq('driver_phone', driver.phone);
         }
 
-        // إدارة البث المباشر (Live)
         async function toggleLive() {
             const toggleSwitch = document.getElementById('liveToggleSwitch');
             const toggleText = document.getElementById('liveToggleText');
 
             if (!isLive) {
-                // تشغيل
                 if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
                 watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
                 isLive = true;
@@ -287,9 +275,8 @@
                 toggleText.textContent = 'مباشر';
                 showToast('أنت الآن مباشر على الخريطة', 'success');
             } else {
-                // إطفاء
+                isLive = false; // إيقاف الإرسال أولاً
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-                isLive = false; // منع إرسال أي إحداثيات أثناء الحذف
                 
                 try {
                     await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
@@ -298,10 +285,7 @@
                     toggleText.classList.remove('active');
                     toggleText.textContent = 'مغلق';
                     
-                    if(myMarker) { 
-                        map.removeLayer(myMarker); 
-                        myMarker = null; 
-                    }
+                    if(myMarker) { map.removeLayer(myMarker); myMarker = null; }
                     
                     showToast('تم إخفاء سيارتك من الخريطة', 'error');
                 } catch (err) {
@@ -322,7 +306,7 @@
 
         let lastSent = 0;
         async function onPosition(pos) {
-            if (!isLive) return; // حماية إضافية
+            if (!isLive) return; 
             const { latitude: lat, longitude: lng } = pos.coords;
             if (!myMarker) { myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map); map.setView([lat, lng], 16); }
             else { myMarker.setLatLng([lat, lng]); }
