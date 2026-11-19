@@ -1,177 +1,235 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق السائق - جامعة الناجي</title>
-    
-    <!-- مكتبة Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6;
-            --bg: #0f172a; --card-bg: rgba(30, 41, 59, 0.85); --glass-border: rgba(255, 255, 255, 0.1);
-            --text: #f1f5f9; --text-light: #94a3b8; --success: #10b981; --danger: #ef4444;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        
-        .app-container { width: 100%; max-width: 400px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 25px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(20px); }
-        
-        .header { text-align: center; margin-bottom: 30px; }
-        .header .icon-box { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; margin: 0 auto 15px; box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
-        .header h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 5px; }
-        .header p { color: var(--text-light); font-size: 0.9rem; }
-
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-light); }
-        .form-group input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; font-family: inherit; font-size: 1rem; font-weight: 700; outline: none; transition: 0.3s; }
-        .form-group input:focus { border-color: var(--primary-light); box-shadow: 0 0 10px rgba(59,130,246,0.3); }
-
-        .status-box { text-align: center; padding: 15px; border-radius: 12px; margin-bottom: 25px; font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
-        .status-offline { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
-        .status-online { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-
-        .action-btn { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-start { background: linear-gradient(135deg, var(--success), #059669); color: white; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
-        .btn-start:hover { transform: translateY(-3px); }
-        .btn-stop { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
-        .btn-stop:hover { transform: translateY(-3px); }
-
-        .coords-box { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; font-family: monospace; font-size: 0.85rem; color: var(--text-light); text-align: center; display: none; border: 1px dashed var(--glass-border); }
-        
-        .back-link { text-align: left; margin-bottom: 15px; }
-        .back-link a { color: var(--text-light); text-decoration: none; font-size: 0.9rem; font-weight: bold; transition: 0.3s; }
-        .back-link a:hover { color: white; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة السائق - جامعة الناجي</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root { --primary:#1e3a8a; --primary-light:#3b82f6; --accent:#8b5cf6; --success:#10b981; --danger:#ef4444; --bg:#f0f4ff; --text:#1f2937; --shadow:0 8px 32px rgba(0,0,0,0.08); }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;}
+  body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
+  .top-bar{background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 15px rgba(0,0,0,0.05);position:sticky;top:0;z-index:1000;}
+  .top-bar h1{font-size:1.1rem;color:var(--primary);font-weight:900;display:flex;align-items:center;gap:10px;}
+  .back-btn{text-decoration:none;color:#fff;background:var(--primary);padding:8px 15px;border-radius:50px;font-weight:700;font-size:0.85rem;}
+  .container{max-width:600px;margin:20px auto;padding:0 15px;}
+  .card{background:#fff;border-radius:20px;padding:25px;box-shadow:var(--shadow);margin-bottom:20px;}
+  .card h2{color:var(--primary);margin-bottom:20px;font-size:1.1rem;display:flex;align-items:center;gap:8px;}
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-size:0.85rem;font-weight:800;margin-bottom:6px;}
+  .field input{width:100%;padding:12px 16px;border:2px solid #e5e7eb;border-radius:12px;font-size:0.95rem;font-weight:700;outline:none;font-family:'Cairo';}
+  .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:900;cursor:pointer;font-family:'Cairo';transition:0.2s;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-start{background:var(--success);color:#fff;}
+  .btn-stop{background:var(--danger);color:#fff;}
+  #map{height:300px;border-radius:15px;margin-bottom:15px;}
+  
+  .booking-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:10px; }
+  .booking-item h4 { color:var(--primary); margin-bottom:5px; }
+  .booking-item p { font-size:0.85rem; color:#64748b; margin-bottom:10px; }
+  .booking-actions { display:flex; gap:10px; }
+  .btn-accept { background:var(--success); color:white; padding:8px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; flex:1; }
+  .btn-reject { background:var(--danger); color:white; padding:8px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; flex:1; }
+</style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="back-link">
-            <a href="index.html"><i class="fas fa-arrow-left"></i> عرض صفحة الطالب</a>
-        </div>
+<div class="top-bar">
+  <h1><i class="fas fa-user-tie"></i> لوحة السائق</h1>
+  <a href="index.html" class="back-btn">رجوع</a>
+</div>
 
-        <div class="header">
-            <div class="icon-box"><i class="fas fa-bus"></i></div>
-            <h1>بوابة السائق</h1>
-            <p>خطوط النقل الجامعية</p>
-        </div>
+<!-- شاشة التسجيل -->
+<div id="setupScreen" class="container">
+  <div class="card">
+    <h2><i class="fas fa-id-card"></i> بياناتك كسائق</h2>
+    <div class="field"><label>الاسم</label><input id="fName" placeholder="اسمك"></div>
+    <div class="field"><label>الهاتف</label><input id="fPhone" placeholder="07XXXXXXXXX"></div>
+    <div class="field"><label>المنطقة</label><input id="fArea" placeholder="المنطقة"></div>
+    <div class="field"><label>السيارة</label><input id="fCar" placeholder="نوع السيارة"></div>
+    <div class="field"><label>المقاعد</label><input id="fSeats" type="number" value="4"></div>
+    <div class="field"><label>السعر</label><input id="fPrice" type="number" value="50000"></div>
+    <div class="field"><label>وقت الانطلاق</label><input id="fTime" placeholder="07:00 صباحاً"></div>
+    <button class="btn btn-primary" onclick="saveDriver()">حفظ ومتابعة</button>
+  </div>
+</div>
 
-        <div class="status-box status-offline" id="statusBox">
-            <i class="fas fa-wifi"></i> الرحلة متوقفة
-        </div>
-
-        <div class="form-group">
-            <label>اسم السائق</label>
-            <input type="text" id="driverName" placeholder="أدخل اسمك" value="أحمد علي">
-        </div>
-        <div class="form-group">
-            <label>المنطقة (الخط)</label>
-            <input type="text" id="driverArea" placeholder="مثال: اليرموك" value="اليرموك">
-        </div>
-
-        <button class="action-btn btn-start" id="startBtn" onclick="startTrip()">
-            <i class="fas fa-play"></i> بدء الرحلة
-        </button>
-        <button class="action-btn btn-stop" id="stopBtn" onclick="stopTrip()" style="display: none;">
-            <i class="fas fa-stop"></i> إنهاء الرحلة
-        </button>
-
-        <div class="coords-box" id="coordsBox">
-            Lat: <span id="latTxt">-</span> <br> Lng: <span id="lngTxt">-</span>
-        </div>
+<!-- لوحة التحكم -->
+<div id="dashboard" class="container" style="display:none;">
+  <div class="card">
+    <div id="map"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <div><span id="statusText" style="font-weight:900;">متوقف</span></div>
+      <button id="toggleBtn" class="btn btn-start" style="width:auto; padding:10px 25px;" onclick="toggleTrip()">بدء الرحلة</button>
     </div>
+  </div>
 
-    <script>
-        // ═══════════════════════════════════════════════════════
-        // ⚠️ ضع بيانات Supabase الخاصة بك هنا 👇
-        // ═══════════════════════════════════════════════════════
-        const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
-        const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
-        
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- قسم الحجوزات -->
+  <div class="card">
+    <h2><i class="fas fa-bell"></i> طلبات الحجز</h2>
+    <div id="bookingsList">
+      <p style="text-align:center; color:#666;">لا توجد حجوزات حالياً.</p>
+    </div>
+  </div>
+</div>
 
-        let watchId = null;
-        let updateInterval = null;
-        let currentLat = null;
-        let currentLng = null;
+<script>
+const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
+const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function startTrip() {
-            if (!navigator.geolocation) {
-                alert("متصفحك لا يدعم تحديد الموقع!");
-                return;
-            }
+let driver = null;
+let watchId = null;
+let isLive = false;
+let map, myMarker;
+const studentMarkers = {};
 
-            const driverName = document.getElementById('driverName').value;
-            const driverArea = document.getElementById('driverArea').value;
+// ───────── الحفظ ─────────
+async function saveDriver() {
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const area = document.getElementById('fArea').value.trim();
+  const car = document.getElementById('fCar').value.trim();
+  const seats = parseInt(document.getElementById('fSeats').value) || 4;
+  const price = parseInt(document.getElementById('fPrice').value) || 0;
+  const time = document.getElementById('fTime').value.trim();
 
-            if(!driverName || !driverArea) {
-                alert("الرجاء إدخال الاسم والمنطقة أولاً.");
-                return;
-            }
+  if (!name || !phone || !area) return alert('الاسم والهاتف والمنطقة مطلوبة');
 
-            // تغيير الواجهة
-            document.getElementById('startBtn').style.display = 'none';
-            document.getElementById('stopBtn').style.display = 'flex';
-            const statusBox = document.getElementById('statusBox');
-            statusBox.className = 'status-box status-online';
-            statusBox.innerHTML = '<i class="fas fa-satellite-dish"></i> جاري بث الموقع...';
-            document.getElementById('coordsBox').style.display = 'block';
+  driver = { name, phone, area, car, seats, price, time };
+  localStorage.setItem('driver', JSON.stringify(driver));
 
-            // بدء تتبع الموقع
-            watchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    currentLat = position.coords.latitude;
-                    currentLng = position.coords.longitude;
-                    
-                    document.getElementById('latTxt').innerText = currentLat.toFixed(5);
-                    document.getElementById('lngTxt').innerText = currentLng.toFixed(5);
-                },
-                (error) => {
-                    alert("خطأ في جلب الموقع. يرجى السماح بالوصول للموقع.");
-                    stopTrip();
-                },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-            );
+  const { error } = await sb.from('routes').upsert({
+    driver_phone: phone, driver_name: name, car, area,
+    total_seats: seats, available_seats: seats, price, time, active: true
+  }, { onConflict: 'driver_phone' });
 
-            // إرسال الإحداثيات إلى Supabase كل 5 ثوانٍ
-            updateInterval = setInterval(async () => {
-                if (currentLat && currentLng) {
-                    const { error } = await supabaseClient
-                        .from('live_buses')
-                        .upsert({ 
-                            id: driverName, // نستخدم اسم السائق كمعرف ثابت
-                            driver_name: driverName,
-                            area: driverArea,
-                            lat: currentLat,
-                            lng: currentLng
-                        });
-                        
-                    if (error) {
-                        console.error("خطأ في الإرسال:", error);
-                    } else {
-                        console.log("✅ تم إرسال الموقع بنجاح:", currentLat, currentLng);
-                    }
-                }
-            }, 5000);
-        }
+  if (error) { alert('خطأ: ' + error.message); return; }
+  openDashboard();
+}
 
-        function stopTrip() {
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            if (updateInterval) clearInterval(updateInterval);
-            
-            document.getElementById('startBtn').style.display = 'flex';
-            document.getElementById('stopBtn').style.display = 'none';
-            const statusBox = document.getElementById('statusBox');
-            statusBox.className = 'status-box status-offline';
-            statusBox.innerHTML = '<i class="fas fa-wifi"></i> الرحلة متوقفة';
-            document.getElementById('coordsBox').style.display = 'none';
-        }
-    </script>
+function openDashboard() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+
+  map = L.map('map').setView([33.2765, 44.3380], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  
+  loadBookings(); // جلب الحجوزات
+}
+
+// ───────── إدارة الحجوزات (الجزء الجديد) ─────────
+async function loadBookings() {
+  // جلب الحجوزات المعلقة
+  const { data, error } = await sb.from('bookings')
+    .select('*')
+    .eq('driver_phone', driver.phone)
+    .eq('status', 'pending');
+
+  const list = document.getElementById('bookingsList');
+  
+  if (!data || data.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#666;">لا توجد حجوزات حالياً.</p>';
+    return;
+  }
+
+  list.innerHTML = data.map(b => `
+    <div class="booking-item" id="book_${b.id}">
+      <h4><i class="fas fa-user"></i> ${b.student_name}</h4>
+      <p><i class="fas fa-phone"></i> ${b.student_phone}</p>
+      <div class="booking-actions">
+        <button class="btn-accept" onclick="handleBooking('${b.id}', 'accepted')">قبول</button>
+        <button class="btn-reject" onclick="handleBooking('${b.id}', 'rejected')">رفض</button>
+      </div>
+    </div>
+  `).join('');
+
+  // الاستماع لأي حجز جديد يصل
+  sb.channel('bookings_channel')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `driver_phone=eq.${driver.phone}` }, payload => {
+        loadBookings(); // تحديث القائمة فوراً
+    }).subscribe();
+}
+
+async function handleBooking(bookingId, status) {
+  // 1. تحديث حالة الحجز
+  await sb.from('bookings').update({ status: status }).eq('id', bookingId);
+  
+  // 2. إذا تم القبول، قلل عدد المقاعد المتاحة
+  if (status === 'accepted') {
+     const { data: route } = await sb.from('routes').select('available_seats').eq('driver_phone', driver.phone).single();
+     if (route && route.available_seats > 0) {
+        await sb.from('routes').update({ available_seats: route.available_seats - 1 }).eq('driver_phone', driver.phone);
+     }
+     // إظهار موقع الطالب على الخريطة
+     const { data: b } = await sb.from('bookings').select('*').eq('id', bookingId).single();
+     if (b && b.student_lat) {
+        if(studentMarkers[bookingId]) map.removeLayer(studentMarkers[bookingId]);
+        studentMarkers[bookingId] = L.marker([b.student_lat, b.student_lng], {icon: L.divIcon({className:'', html:'<div style="background:var(--accent); color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-user"></i></div>'})})
+        .addTo(map).bindPopup(`<b>${b.student_name}</b><br>موقع الحجز`);
+        map.flyTo([b.student_lat, b.student_lng], 15);
+     }
+  }
+
+  document.getElementById(`book_${bookingId}`).remove(); // إخفاء من القائمة
+}
+
+// ───────── بدء / إيقاف الرحلة (GPS) ─────────
+async function toggleTrip() { isLive ? stopTrip() : startTrip(); }
+
+async function startTrip() {
+  if (!navigator.geolocation) return alert('جهازك لا يدعم تحديد الموقع');
+  
+  watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true });
+  isLive = true;
+  
+  const btn = document.getElementById('toggleBtn');
+  document.getElementById('statusText').textContent = 'مباشر الآن';
+  btn.textContent = 'إيقاف الرحلة';
+  btn.className = 'btn btn-stop';
+  btn.style.width = 'auto'; btn.style.padding = '10px 25px';
+}
+
+async function stopTrip() {
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  isLive = false;
+  await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
+  
+  const btn = document.getElementById('toggleBtn');
+  document.getElementById('statusText').textContent = 'متوقف';
+  btn.textContent = 'بدء الرحلة';
+  btn.className = 'btn btn-start';
+  btn.style.width = 'auto'; btn.style.padding = '10px 25px';
+}
+
+let lastSent = 0;
+async function onPosition(pos) {
+  const { latitude: lat, longitude: lng } = pos.coords;
+  if (!myMarker) {
+    myMarker = L.marker([lat, lng], {icon: L.divIcon({className:'', html:'<div style="background:#1e3a8a; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:3px solid white;"><i class="fas fa-bus"></i></div>'})}).addTo(map);
+    map.setView([lat, lng], 15);
+  } else { myMarker.setLatLng([lat, lng]); map.panTo([lat, lng]); }
+
+  const now = Date.now();
+  if (now - lastSent < 2000) return;
+  lastSent = now;
+
+  await sb.from('live_buses').upsert({
+    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, lat, lng,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'driver_phone' });
+}
+
+function onError(err) { console.error(err); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('driver');
+  if (saved) { driver = JSON.parse(saved); openDashboard(); }
+});
+</script>
 </body>
 </html>
