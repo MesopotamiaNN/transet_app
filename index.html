@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>خطوط النقل - جامعة الناجي</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -10,78 +10,83 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary:#1e3a8a; --primary-light:#3b82f6; --accent:#8b5cf6; --success:#10b981; --bg:#f0f4ff; --text:#1f2937; --text-light:#6b7280; --shadow:0 8px 32px rgba(0,0,0,0.08); }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; }
-        body { background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:40px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body, html { height: 100%; overflow: hidden; background: #f0f4ff; }
         
-        .top-bar { background:white; padding:15px 20px; position:sticky; top:0; z-index:1000; box-shadow:0 4px 15px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center; }
-        .top-bar h1 { font-size:1.2rem; color:var(--primary); font-weight:900; display:flex; align-items:center; gap:10px; }
-        .back-btn { text-decoration:none; color:white; background:var(--primary); padding:8px 15px; border-radius:50px; font-weight:700; font-size:0.85rem; }
-        .driver-btn { background:var(--accent); }
+        /* الخريطة كاملة الشاشة */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        .map-wrapper { padding:15px; position:relative; }
-        #map { height:300px; width:100%; border-radius:20px; box-shadow:var(--shadow); z-index:1; }
-        .live-badge { position:absolute; top:25px; right:25px; z-index:1000; background:var(--success); color:white; padding:5px 12px; border-radius:20px; font-size:0.8rem; font-weight:800; display:none; align-items:center; gap:5px; box-shadow:0 5px 15px rgba(16,185,129,0.4); animation:pulse 2s infinite; }
-        @keyframes pulse { 0%{opacity:1;} 50%{opacity:0.7;} 100%{opacity:1;} }
+        /* زر فتح القائمة */
+        .fab-btn {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; background: #1e3a8a; color: white;
+            padding: 12px 25px; border-radius: 50px; font-weight: 900; font-size: 1rem;
+            box-shadow: 0 10px 25px rgba(30,58,138,0.4); border: none; cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+        }
 
-        .booking-section { padding:0 15px; max-width:800px; margin:0 auto; }
-        .section-title { font-size:1.3rem; font-weight:900; color:var(--primary); margin:20px 0 15px; display:flex; align-items:center; gap:10px; }
-        .search-box { display:flex; align-items:center; background:white; border-radius:50px; padding:5px 20px; margin-bottom:20px; box-shadow:var(--shadow); }
-        .search-box input { flex:1; border:none; outline:none; padding:15px 10px; font-size:1rem; font-weight:700; background:transparent; }
-
-        .routes-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px; }
-        .route-card { background:white; border-radius:15px; padding:20px; box-shadow:var(--shadow); border-right:5px solid var(--primary-light); }
-        .route-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; }
-        .driver-info h3 { font-size:1.1rem; font-weight:800; margin-bottom:3px; }
-        .driver-info p { font-size:0.8rem; color:var(--text-light); }
-        .area-badge { background:rgba(59,130,246,0.1); color:var(--primary-light); padding:5px 10px; border-radius:10px; font-size:0.8rem; font-weight:800; }
-        .route-details { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; font-size:0.85rem; font-weight:700; color:var(--text-light); }
-        .route-footer { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:15px; }
-        .price { font-size:1.2rem; font-weight:900; color:var(--primary); }
-        .price span { font-size:0.7rem; color:var(--text-light); }
-        .book-btn { background:var(--primary); color:white; text-decoration:none; padding:8px 20px; border-radius:50px; font-weight:800; font-size:0.9rem; cursor:pointer; border:none; transition:0.3s; }
-        .book-btn:hover { background:var(--primary-light); }
+        /* القائمة السفلية (Bottom Sheet) */
+        .bottom-sheet {
+            position: absolute; bottom: -100%; left: 0; width: 100%; height: 60%;
+            background: white; z-index: 2000; border-radius: 25px 25px 0 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1); transition: bottom 0.3s ease-in-out;
+            display: flex; flex-direction: column;
+        }
+        .bottom-sheet.open { bottom: 0; }
         
-        /* Modal Styles */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center; padding:20px; }
-        .modal-content { background:white; padding:25px; border-radius:20px; width:100%; max-width:400px; text-align:center; }
-        .modal-content h3 { color:var(--primary); margin-bottom:15px; }
-        .modal-content input { width:100%; padding:12px; margin-bottom:10px; border:1px solid #ccc; border-radius:10px; font-family:'Cairo'; font-weight:700; }
-        .modal-content button { width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:900; font-family:'Cairo'; cursor:pointer; }
+        .sheet-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .sheet-header h2 { font-size: 1.2rem; color: #1e3a8a; font-weight: 900; }
+        .close-btn { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; color: #333; }
+
+        .drivers-list { padding: 15px; overflow-y: auto; flex: 1; }
+        .driver-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px;
+            padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .driver-info h3 { font-size: 1rem; color: #1f2937; margin-bottom: 5px; }
+        .driver-info p { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 5px; }
+        
+        .book-btn {
+            background: #10b981; color: white; border: none; padding: 8px 15px;
+            border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.85rem;
+        }
+        .book-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        /* نافذة تأكيد الحجز */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; padding: 20px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; }
+        .modal-content h3 { color: #1e3a8a; margin-bottom: 10px; }
+        .modal-content p { font-size: 0.9rem; color: #64748b; margin-bottom: 20px; }
+        .modal-content button { width: 100%; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-weight: bold; font-family: 'Cairo'; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <h1><i class="fas fa-bus-alt"></i> خطوط النقل</h1>
-        <div style="display:flex; gap:8px;">
-            <a href="Driver.html" class="back-btn driver-btn"><i class="fas fa-user-tie"></i> السائق</a>
+    <!-- الخريطة كاملة الشاشة -->
+    <div id="map"></div>
+
+    <!-- زر عرض السائقين -->
+    <button class="fab-btn" onclick="toggleSheet()">
+        <i class="fas fa-list"></i> عرض السائقين
+    </button>
+
+    <!-- القائمة السفلية -->
+    <div class="bottom-sheet" id="driverSheet">
+        <div class="sheet-header">
+            <h2><i class="fas fa-bus"></i> السائقون المتاحون</h2>
+            <button class="close-btn" onclick="toggleSheet()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="drivers-list" id="driversList">
+            <!-- سيتم تعبئتها ديناميكياً -->
         </div>
     </div>
 
-    <div class="map-wrapper">
-        <div class="live-badge" id="liveBadge"><i class="fas fa-circle" style="font-size:8px;"></i> الباصات مباشرة</div>
-        <div id="map"></div>
-    </div>
-
-    <div class="booking-section">
-        <h2 class="section-title"><i class="fas fa-search-location"></i> ابحث عن خط منطقتك</h2>
-        <div class="search-box">
-            <i class="fas fa-map-marker-alt" style="color:var(--text-light);"></i>
-            <input type="text" id="searchInput" placeholder="اكتب اسم المنطقة..." onkeyup="filterRoutes()">
-        </div>
-        <div class="routes-grid" id="routesContainer"></div>
-    </div>
-
-    <!-- نافذة الحجز -->
+    <!-- نافذة تأكيد الحجز -->
     <div class="modal" id="bookingModal">
         <div class="modal-content">
             <h3><i class="fas fa-ticket-alt"></i> تأكيد الحجز</h3>
-            <p style="margin-bottom:15px; font-size:0.9rem; color:#666;">خط: <span id="modalArea"></span></p>
-            <input type="text" id="stdName" placeholder="اسمك الثلاثي">
-            <input type="text" id="stdPhone" placeholder="رقم هاتفك (07XXXXXXXXX)">
-            <button onclick="confirmBooking()"><i class="fas fa-check"></i> إرسال طلب الحجز</button>
-            <button onclick="closeModal()" style="background:#ccc; margin-top:10px;">إلغاء</button>
+            <p>خط: <span id="modalArea"></span><br>سيتم إرسال طلبك للسائق.</p>
+            <button onclick="confirmBooking()">تأكيد وإرسال الموقع</button>
         </div>
     </div>
 
@@ -90,13 +95,19 @@
         const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // سيتم جلب بيانات الطالب من نظام الجامعة لاحقاً
+        // للتجربة، نضع رقم تسجيل وهمي
+        const STUDENT = { id: "2023-1234", name: "طالب تجريبي" }; 
+
         let routesData = [];
         let selectedDriverPhone = null;
         let studentLocation = null;
+        const busMarkers = {};
 
-        // الخريطة
-        const map = L.map('map').setView([33.2765, 44.3380], 14);
+        // إعداد الخريطة
+        const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.control.zoom({ position: 'topright' }).addTo(map); // زر التكبير عاليمين
         L.marker([33.2765, 44.3380]).addTo(map).bindPopup("<b>جامعة الناجي</b>");
 
         const busIcon = L.divIcon({
@@ -105,90 +116,73 @@
             iconSize: [35, 35], iconAnchor: [17, 17]
         });
 
-        const busMarkers = {};
-
-        // 1. جلب الخطوط
-        async function loadRoutes() {
-            const { data, error } = await sb.from('routes').select('*').eq('active', true);
-            if (error) { console.error(error); return; }
-            routesData = data || [];
-            renderRoutes(routesData);
+        // فتح وإغلاق القائمة
+        function toggleSheet() {
+            document.getElementById('driverSheet').classList.toggle('open');
         }
 
-        // 2. عرض الخطوط
-        function renderRoutes(routes) {
-            const container = document.getElementById('routesContainer');
-            if (routes.length === 0) {
-                container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-light);"><h3>لا توجد خطوط متاحة.</h3></div>`;
+        // جلب السائقين وعرضهم في القائمة
+        async function loadDrivers() {
+            const { data, error } = await sb.from('routes').select('*').eq('active', true);
+            if (error) return console.error(error);
+            
+            routesData = data || [];
+            const list = document.getElementById('driversList');
+            
+            if (routesData.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#666;">لا يوجد سائقون متاحون حالياً.</p>';
                 return;
             }
-            container.innerHTML = routes.map(route => {
-                const isFull = route.available_seats <= 0;
-                return `
-                <div class="route-card">
-                    <div class="route-header">
-                        <div class="driver-info"><h3>${route.driver_name}</h3><p><i class="fas fa-car"></i> ${route.car}</p></div>
-                        <div class="area-badge">${route.area}</div>
+
+            list.innerHTML = routesData.map(route => `
+                <div class="driver-card">
+                    <div class="driver-info">
+                        <h3><i class="fas fa-user-tie"></i> ${route.driver_name}</h3>
+                        <p><i class="fas fa-car"></i> ${route.car || 'غير محدد'} | <i class="fas fa-users"></i> ${route.available_seats} مقاعد</p>
                     </div>
-                    <div class="route-details">
-                        <span><i class="fas fa-clock"></i> ${route.time || 'غير محدد'}</span>
-                        <span><i class="fas fa-users"></i> ${route.available_seats} مقاعد</span>
-                    </div>
-                    <div class="route-footer">
-                        <div class="price">${(route.price||0).toLocaleString()} <span>د.ع</span></div>
-                        <button class="book-btn" ${isFull ? 'disabled style="background:gray;"' : `onclick="openModal('${route.driver_phone}', '${route.area}')"`}>
-                            ${isFull ? 'مكتمل' : '<i class="fas fa-ticket-alt"></i> حجز'}
-                        </button>
-                    </div>
-                </div>`;
-            }).join('');
+                    <button class="book-btn" onclick="openModal('${route.driver_phone}', '${route.area}')" ${route.available_seats <= 0 ? 'disabled' : ''}>
+                        ${route.available_seats <= 0 ? 'مكتمل' : 'حجز'}
+                    </button>
+                </div>
+            `).join('');
         }
 
-        function filterRoutes() {
-            const q = document.getElementById('searchInput').value.trim();
-            renderRoutes(routesData.filter(r => r.area.includes(q)));
-        }
-
-        // 3. نظام الحجز
+        // فتح نافذة الحجز وجلب موقع الطالب
         function openModal(phone, area) {
             selectedDriverPhone = phone;
             document.getElementById('modalArea').textContent = area;
             document.getElementById('bookingModal').style.display = 'flex';
             
-            // محاولة جلب موقع الطالب لإرساله مع الحجز
+            // جلب موقع الطالب
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     pos => { studentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
-                    err => { console.log("لم يتم جلب الموقع", err); }
+                    err => { console.log("لم يتم جلب الموقع"); }
                 );
             }
         }
 
-        function closeModal() { document.getElementById('bookingModal').style.display = 'none'; }
-
+        // تأكيد الحجز (إرسال البيانات لقاعدة البيانات)
         async function confirmBooking() {
-            const name = document.getElementById('stdName').value.trim();
-            const phone = document.getElementById('stdPhone').value.trim();
-            
-            if (!name || !phone) return alert('الرجاء إدخال الاسم ورقم الهاتف');
+            document.getElementById('bookingModal').style.display = 'none';
 
             const { error } = await sb.from('bookings').insert([{
                 driver_phone: selectedDriverPhone,
-                student_name: name,
-                student_phone: phone,
+                student_id: STUDENT.id, // رقم تسجيل الطالب من الجامعة
+                student_name: STUDENT.name,
                 student_lat: studentLocation ? studentLocation.lat : null,
                 student_lng: studentLocation ? studentLocation.lng : null,
                 status: 'pending'
             }]);
 
-            if (error) alert('حدث خطأ: ' + error.message);
-            else {
+            if (error) {
+                alert('حدث خطأ أثناء الحجز: ' + error.message);
+            } else {
                 alert('✅ تم إرسال طلب الحجز بنجاح! انتظر موافقة السائق.');
-                closeModal();
             }
         }
 
-        // 4. التتبع الحي (رؤية الباصات)
+        // التتبع الحي للسائقين
         async function loadLiveBuses() {
             const { data } = await sb.from('live_buses').select('*');
             (data || []).forEach(drawBus);
@@ -201,13 +195,11 @@
                             delete busMarkers[payload.old.driver_phone];
                         }
                     } else { drawBus(payload.new); }
-                    document.getElementById('liveBadge').style.display = Object.keys(busMarkers).length ? 'flex' : 'none';
                 }).subscribe();
         }
 
         function drawBus(bus) {
             if (!bus?.lat || !bus?.lng) return;
-            document.getElementById('liveBadge').style.display = 'flex';
             if (busMarkers[bus.driver_phone]) {
                 busMarkers[bus.driver_phone].setLatLng([bus.lat, bus.lng]);
             } else {
@@ -216,8 +208,9 @@
             }
         }
 
+        // التشغيل
         document.addEventListener('DOMContentLoaded', () => {
-            loadRoutes();
+            loadDrivers();
             loadLiveBuses();
         });
     </script>
