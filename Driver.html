@@ -10,11 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e3a8a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="icon-192.png">
-
 <style>
     :root { 
         --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6; --success: #10b981; --danger: #ef4444; 
@@ -92,7 +87,6 @@
         transition: bottom 0.4s var(--spring); display: flex; flex-direction: column; 
         box-shadow: 0 -10px 40px rgba(0,0,0,0.2); 
     }
-    /* تم تعديل هذا السطر لتصعد النافذة فوق الشريط السفلي */
     .bottom-sheet.open { bottom: 105px; } 
     
     .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
@@ -148,7 +142,7 @@
             <i class="fas fa-chair"></i> المقاعد
         </div>
         
-        <!-- زر البث الجديد -->
+        <!-- زر البث -->
         <div class="nav-item live-toggle-item" onclick="toggleLive()">
             <div class="toggle-switch" id="liveToggleSwitch">
                 <div class="toggle-knob"><i class="fas fa-power-off"></i></div>
@@ -250,7 +244,7 @@
             startDashboard();
         }
 
-        function startDashboard() {
+        async function startDashboard() {
             document.getElementById('setupScreen').style.display = 'none';
             document.getElementById('driverNav').style.display = 'flex';
             document.getElementById('driverMapControls').style.display = 'flex';
@@ -258,7 +252,9 @@
             document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
             
             setTimeout(() => map.invalidateSize(), 200);
-            toggleLive(); // تشغيل البث تلقائياً
+            
+            // تأكد أن السائق يبدأ "مغلقاً" (غير متاح) عند فتح الصفحة
+            await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
         }
 
         // إدارة المقاعد
@@ -273,16 +269,16 @@
             currentAvailableSeats = newSeats;
             document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
 
-            // تحديث في قاعدة البيانات
             await sb.from('routes').update({ available_seats: currentAvailableSeats }).eq('driver_phone', driver.phone);
         }
 
         // إدارة البث المباشر (Live)
-        function toggleLive() {
+        async function toggleLive() {
             const toggleSwitch = document.getElementById('liveToggleSwitch');
             const toggleText = document.getElementById('liveToggleText');
 
             if (!isLive) {
+                // تشغيل
                 if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
                 watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
                 isLive = true;
@@ -292,14 +288,23 @@
                 toggleText.textContent = 'مباشر';
                 showToast('أنت الآن مباشر على الخريطة', 'success');
             } else {
+                // إطفاء
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
                 isLive = false;
                 
                 toggleSwitch.classList.remove('active');
                 toggleText.classList.remove('active');
                 toggleText.textContent = 'مغلق';
-                sb.from('live_buses').delete().eq('driver_phone', driver.phone);
-                showToast('تم إيقاف البث المباشر', 'error');
+                
+                // مسح الموقع من قاعدة البيانات بشكل مؤكد
+                try {
+                    const { error } = await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
+                    if(error) throw error;
+                    showToast('تم إخفاء سيارتك من الخريطة', 'error');
+                } catch (err) {
+                    console.error("خطأ أثناء الحذف:", err);
+                    showToast('فشل إخفاء السيارة', 'error');
+                }
             }
         }
 
