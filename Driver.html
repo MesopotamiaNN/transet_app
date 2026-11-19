@@ -9,6 +9,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- إعدادات PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 <style>
     :root { 
         --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6; --success: #10b981; --danger: #ef4444; 
@@ -26,6 +33,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
     body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
     
+    /* شاشة التسجيل */
     #setupScreen { position: absolute; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; transition: 0.3s; }
     .setup-card { background: var(--white); padding: 35px 25px; border-radius: 30px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); position: relative; }
     .setup-card h2 { color: var(--text); text-align: center; margin-bottom: 25px; font-size: 1.5rem; font-weight: 900; }
@@ -38,23 +46,68 @@
 
     .setup-theme-btn { position: absolute; top: 20px; left: 20px; background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+    /* الخريطة */
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
     body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
-    .map-controls { position: absolute; bottom: 170px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
+    /* شريط التنقل السفلي (Dashboard) */
+    .bottom-nav { 
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+        width: 92%; max-width: 400px; height: 75px; background: var(--nav-bg); 
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; 
+        border-radius: 24px; box-shadow: var(--shadow-lg); display: none; 
+        justify-content: space-around; align-items: center; border: 1px solid var(--border-light); 
+        padding: 0 10px; transition: 0.3s; 
+    }
+    
+    .nav-item { 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        color: var(--text-muted); font-size: 0.75rem; font-weight: 800; cursor: pointer; 
+        height: 100%; transition: 0.3s var(--spring); flex: 1;
+    }
+    .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
+    .nav-item.active { color: var(--primary); }
+    
+    /* زر البث المباشر */
+    .live-btn-wrapper { position: relative; top: -15px; }
+    .live-btn { 
+        width: 65px; height: 65px; border-radius: 50%; border: 4px solid var(--white); 
+        background: var(--text-muted); color: white; font-size: 1.5rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; transition: 0.4s var(--spring);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    .live-btn.active { background: var(--success); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
+    .live-btn.active i { animation: pulse-icon 1.5s infinite; }
+    @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    /* القائمة السفلية لإدارة المقاعد */
+    .bottom-sheet { 
+        position: absolute; bottom: -100%; left: 0; width: 100%; height: 50%; 
+        background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; 
+        transition: bottom 0.4s var(--spring); display: flex; flex-direction: column; 
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.2); 
+    }
+    .bottom-sheet.open { bottom: 0; }
+    .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
+    .sheet-header { padding: 10px 25px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
+    .close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
+    
+    .seats-container { padding: 30px 25px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .seats-counter { display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 10px; }
+    .seat-btn { 
+        width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--border-light); 
+        background: var(--bg); color: var(--text); font-size: 1.5rem; cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .seat-btn:active { transform: scale(0.9); }
+    .seat-number { font-size: 3.5rem; font-weight: 900; color: var(--primary); line-height: 1; }
+    .seat-label { font-size: 0.9rem; color: var(--text-muted); font-weight: 700; }
+    .total-seats-info { background: var(--bg); padding: 10px 20px; border-radius: 12px; font-weight: 800; color: var(--text); font-size: 0.9rem; }
+
+    .map-controls { position: absolute; bottom: 120px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
     .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
-    .control-btn:active { transform: scale(0.85); }
-
-    .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px; box-shadow: var(--shadow-lg); display: none; justify-content: center; align-items: center; border: 1px solid var(--border-light); padding: 0 10px; transition: 0.3s; }
-    .nav-item { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--danger); font-size: 1rem; font-weight: 900; cursor: pointer; width: 100%; height: 100%; transition: 0.3s var(--spring); }
-    .nav-item i { font-size: 1.4rem; }
-
-    .status-badge { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: var(--nav-bg); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 50px; font-weight: 900; display: none; align-items: center; gap: 10px; font-size: 0.9rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border-light); color: var(--text); transition: 0.3s; }
-    .radar-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--success); position: relative; }
-    .status-badge.live { color: var(--success); }
-    .status-badge.live .radar-dot::after { content: ''; position: absolute; top: -5px; left: -5px; width: 22px; height: 22px; border-radius: 50%; background: rgba(16,185,129,0.4); animation: radar 1.5s infinite; }
-    @keyframes radar { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-
+    
     #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
     .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
     .toast.show { transform: translateY(0); opacity: 1; }
@@ -73,26 +126,55 @@
             <div class="field"><label>المناطق التي تمر بها</label><input id="fArea" placeholder="مثال: اليرموك، الحرية، زيونة"></div>
             <div class="field"><label>نوع السيارة</label><input id="fCar" placeholder="مثال: كيا باص"></div>
             <div style="display:flex; gap:10px;">
-                <div class="field" style="flex:1;"><label>المقاعد</label><input id="fSeats" type="number" value="4"></div>
+                <div class="field" style="flex:1;"><label>المقاعد الكلية</label><input id="fSeats" type="number" value="4"></div>
                 <div class="field" style="flex:1;"><label>السعر (د.ع)</label><input id="fPrice" type="number" value="50000"></div>
             </div>
             <div class="field"><label>وقت الانطلاق</label><input id="fTime" placeholder="07:00 صباحاً"></div>
-            <button class="btn-main" onclick="saveDriver()">حفظ ومتابعة</button>
+            <button class="btn-main" onclick="saveDriver()">بدء الرحلة</button>
         </div>
     </div>
 
     <div id="map"></div>
     
-    <div class="status-badge" id="statusBadge">
-        <div class="radar-dot"></div> <span id="statusText">أنت متصل (مباشر)</span>
+    <!-- شريط التحكم السفلي -->
+    <div class="bottom-nav" id="driverNav">
+        <div class="nav-item" onclick="closeSheet()">
+            <i class="fas fa-map-marked-alt"></i> الخريطة
+        </div>
+        <div class="nav-item" onclick="openSeatsSheet()">
+            <i class="fas fa-chair"></i> المقاعد
+        </div>
+        <div class="nav-item live-btn-wrapper">
+            <div class="live-btn" id="liveBtn" onclick="toggleLive()">
+                <i class="fas fa-power-off"></i>
+            </div>
+        </div>
+        <div class="nav-item" onclick="stopTrip()" style="color: var(--danger);">
+            <i class="fas fa-sign-out-alt"></i> إنهاء
+        </div>
     </div>
 
     <div class="map-controls" id="driverMapControls">
         <button class="control-btn" id="themeToggleDriver" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </div>
 
-    <div class="bottom-nav" id="driverNav">
-        <div class="nav-item" onclick="stopTrip()"><i class="fas fa-power-off"></i> إنهاء الرحلة</div>
+    <!-- نافذة إدارة المقاعد -->
+    <div class="bottom-sheet" id="seatsSheet">
+        <div class="drag-handle"></div>
+        <div class="sheet-header">
+            <h2>إدارة المقاعد</h2>
+            <button class="close-btn" onclick="closeSeatsSheet()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="seats-container">
+            <div class="total-seats-info">المركبة تتسع لـ <span id="displayTotalSeats">4</span> مقاعد</div>
+            <div class="seat-label">المقاعد الشاغرة حالياً</div>
+            <div class="seats-counter">
+                <button class="seat-btn" onclick="updateSeats(-1)"><i class="fas fa-minus"></i></button>
+                <div class="seat-number" id="displayAvailableSeats">4</div>
+                <button class="seat-btn" onclick="updateSeats(1)"><i class="fas fa-plus"></i></button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; font-weight: 600;">سيتم تحديث هذا العدد للطلاب فوراً.</p>
+        </div>
     </div>
 
     <div id="toastContainer"></div>
@@ -120,7 +202,8 @@
 
         const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:18px;"></i></div>', iconSize: [40, 40], iconAnchor: [20, 20] });
 
-        let driver = null, watchId = null, myMarker = null;
+        let driver = null, watchId = null, myMarker = null, isLive = false;
+        let currentAvailableSeats = 4;
 
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
@@ -132,7 +215,7 @@
             toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}" style="color:${type === 'error' ? 'var(--danger)' : 'var(--success)'}; font-size:1.2rem;"></i> <span>${message}</span>`;
             document.getElementById('toastContainer').appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
 
         async function saveDriver() {
@@ -148,19 +231,15 @@
 
             driver = { name, phone, area, car, seats, price, time };
             localStorage.setItem('driver', JSON.stringify(driver));
+            currentAvailableSeats = seats;
 
             try {
-                showToast('جاري حفظ البيانات...', 'success');
                 const { error } = await sb.from('routes').upsert({ 
                     driver_phone: phone, driver_name: name, car, area, 
                     total_seats: seats, available_seats: seats, price, time, active: true 
                 }, { onConflict: 'driver_phone' });
                 if (error) throw error;
-                showToast('تم الحفظ بنجاح!', 'success');
-            } catch (err) { 
-                console.error("خطأ في حفظ البيانات:", err);
-                showToast('فشل الحفظ: ' + err.message, 'error'); 
-            }
+            } catch (err) { showToast('فشل الحفظ', 'error'); }
             
             startDashboard();
         }
@@ -169,72 +248,80 @@
             document.getElementById('setupScreen').style.display = 'none';
             document.getElementById('driverNav').style.display = 'flex';
             document.getElementById('driverMapControls').style.display = 'flex';
-            document.getElementById('statusBadge').style.display = 'flex';
+            document.getElementById('displayTotalSeats').textContent = driver.seats;
+            document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
+            
             setTimeout(() => map.invalidateSize(), 200);
-            startTrip();
+            toggleLive(); // تشغيل البث تلقائياً
         }
 
-        function startTrip() {
-            if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
-            
-            showToast('جاري طلب إذن الموقع...', 'success');
-            watchId = navigator.geolocation.watchPosition(
-                onPosition, 
-                onError, 
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-            );
-            document.getElementById('statusBadge').classList.add('live');
+        // إدارة المقاعد
+        function openSeatsSheet() { document.getElementById('seatsSheet').classList.add('open'); }
+        function closeSeatsSheet() { document.getElementById('seatsSheet').classList.remove('open'); }
+
+        async function updateSeats(change) {
+            let newSeats = currentAvailableSeats + change;
+            if (newSeats < 0 || newSeats > driver.seats) return;
+
+            currentAvailableSeats = newSeats;
+            document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
+
+            // تحديث في قاعدة البيانات
+            await sb.from('routes').update({ available_seats: currentAvailableSeats }).eq('driver_phone', driver.phone);
+        }
+
+        // إدارة البث المباشر (Live)
+        function toggleLive() {
+            const btn = document.getElementById('liveBtn');
+            if (!isLive) {
+                if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
+                watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+                isLive = true;
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-satellite-dish"></i>';
+                showToast('أنت الآن مباشر على الخريطة', 'success');
+            } else {
+                if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                isLive = false;
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fas fa-power-off"></i>';
+                sb.from('live_buses').delete().eq('driver_phone', driver.phone);
+                showToast('تم إيقاف البث المباشر', 'error');
+            }
         }
 
         async function stopTrip() {
             if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
-            document.getElementById('statusBadge').classList.remove('live');
-            document.getElementById('driverNav').style.display = 'none';
-            document.getElementById('driverMapControls').style.display = 'none';
-            showToast('تم إنهاء الرحلة بنجاح');
-            setTimeout(() => { window.location.reload(); }, 1500);
+            await sb.from('routes').update({ active: false }).eq('driver_phone', driver.phone);
+            localStorage.removeItem('driver');
+            window.location.reload();
         }
 
         let lastSent = 0;
         async function onPosition(pos) {
             const { latitude: lat, longitude: lng } = pos.coords;
-            if (!myMarker) { myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map).bindPopup("<b>أنت هنا</b>"); map.setView([lat, lng], 16); }
+            if (!myMarker) { myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map); map.setView([lat, lng], 16); }
             else { myMarker.setLatLng([lat, lng]); }
 
             const now = Date.now();
             if (now - lastSent < 3000) return; // كل 3 ثواني
             lastSent = now;
 
-            console.log("محاولة إرسال الموقع:", lat, lng);
-
             try {
-                const { error } = await sb.from('live_buses').upsert({ 
-                    driver_phone: driver.phone, 
-                    driver_name: driver.name, 
-                    area: driver.area, 
-                    lat, lng, 
-                    updated_at: new Date().toISOString() 
+                await sb.from('live_buses').upsert({ 
+                    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, lat, lng, updated_at: new Date().toISOString() 
                 }, { onConflict: 'driver_phone' });
-
-                if (error) {
-                    console.error("خطأ أثناء الإرسال:", error);
-                    showToast('خطأ في الإرسال: ' + error.message, 'error');
-                } else {
-                    console.log("تم إرسال الموقع بنجاح!");
-                }
-            } catch (err) {
-                console.error("خطأ غير متوقع:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function onError(err) { 
-            console.error("خطأ في GPS:", err);
-            let msg = 'تعذر جلب الموقع';
-            if(err.code === 1) msg = 'أنت رفضت إذن الوصول للموقع. يرجى السماح به من إعدادات المتصفح.';
-            if(err.code === 2) msg = 'إشارة الـ GPS ضعيفة. تأكد من تشغيل الموقع في الهاتف.';
-            showToast(msg, 'error'); 
+            showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); 
+            toggleLive(); // إيقاف البث إذا فشل
         }
+
+        // إغلاق القائمة السفلية عند الضغط على الخريطة
+        map.on('click', closeSeatsSheet);
 
         document.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('driver');
