@@ -257,7 +257,6 @@
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
         }
 
-        // إدارة المقاعد
         function openSeatsSheet() { document.getElementById('seatsSheet').classList.add('open'); }
         function closeSeatsSheet() { document.getElementById('seatsSheet').classList.remove('open'); }
         function closeSheet() { closeSeatsSheet(); }
@@ -290,20 +289,25 @@
             } else {
                 // إطفاء
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-                isLive = false;
+                isLive = false; // منع إرسال أي إحداثيات أثناء الحذف
                 
-                toggleSwitch.classList.remove('active');
-                toggleText.classList.remove('active');
-                toggleText.textContent = 'مغلق';
-                
-                // مسح الموقع من قاعدة البيانات بشكل مؤكد
                 try {
-                    const { error } = await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
-                    if(error) throw error;
+                    await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
+                    
+                    toggleSwitch.classList.remove('active');
+                    toggleText.classList.remove('active');
+                    toggleText.textContent = 'مغلق';
+                    
+                    if(myMarker) { 
+                        map.removeLayer(myMarker); 
+                        myMarker = null; 
+                    }
+                    
                     showToast('تم إخفاء سيارتك من الخريطة', 'error');
                 } catch (err) {
                     console.error("خطأ أثناء الحذف:", err);
-                    showToast('فشل إخفاء السيارة', 'error');
+                    showToast('حدث خطأ في إيقاف البث', 'error');
+                    isLive = true; 
                 }
             }
         }
@@ -318,6 +322,7 @@
 
         let lastSent = 0;
         async function onPosition(pos) {
+            if (!isLive) return; // حماية إضافية
             const { latitude: lat, longitude: lng } = pos.coords;
             if (!myMarker) { myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map); map.setView([lat, lng], 16); }
             else { myMarker.setLatLng([lat, lng]); }

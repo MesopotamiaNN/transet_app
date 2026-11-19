@@ -98,7 +98,7 @@
         .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
         .close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
 
-        /* مربع البحث الجديد */
+        /* مربع البحث */
         .search-box { padding: 0 25px 15px; position: relative; }
         .search-box i { position: absolute; right: 40px; top: 15px; color: var(--text-muted); }
         .search-box input { 
@@ -169,7 +169,6 @@
             <button class="close-btn" onclick="closeSheet()"><i class="fas fa-times"></i></button>
         </div>
         
-        <!-- البحث الجديد -->
         <div class="search-box" id="searchBoxContainer">
             <i class="fas fa-search"></i>
             <input type="text" id="searchInput" placeholder="ابحث عن منطقة أو اسم سائق..." oninput="renderDrivers()">
@@ -187,7 +186,6 @@
     <div id="toastContainer"></div>
 
     <script>
-        // إعداد الوضع الليلي
         const themeToggleBtn = document.getElementById('themeToggle');
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
@@ -204,7 +202,6 @@
             }
         }
 
-        // إعداد الخريطة
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.control.zoom({ position: 'topright' }).addTo(map);
@@ -213,6 +210,7 @@
         const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
         let userMarker = null, studentLocation = null, allDrivers = [], liveDrivers = [];
+        const busMarkers = {};
         
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
@@ -252,7 +250,7 @@
                     map.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
                     btn.className = 'fas fa-crosshairs';
                     showToast("تم تحديد موقعك بنجاح");
-                    if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers(); // تحديث المسافات
+                    if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
                 },
                 (err) => { showToast("تعذر تحديد الموقع", "error"); btn.className = 'fas fa-crosshairs'; },
                 { enableHighAccuracy: true }
@@ -266,17 +264,14 @@
 
         function closeSheet() { document.getElementById('mainSheet').classList.remove('open'); setActiveNav('nav-map'); }
 
-        // دالة حساب المسافة بالكيلومترات (Haversine)
         function calculateDistance(lat1, lon1, lat2, lon2) {
             if(!lat1 || !lon1 || !lat2 || !lon2) return null;
-            const R = 6371; // نصف قطر الأرض بالكيلومتر
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return (R * c).toFixed(1); // مثلاً 1.5 كم
+            return (R * c).toFixed(1);
         }
 
         async function openDriversList() {
@@ -293,7 +288,6 @@
         function renderDrivers() {
             const searchQ = document.getElementById('searchInput').value.trim().toLowerCase();
             
-            // دمج بيانات السائق مع موقعه الحي (إن وجد)
             let displayDrivers = allDrivers.map(route => {
                 const live = liveDrivers.find(l => l.driver_phone === route.driver_phone);
                 let distance = null;
@@ -303,7 +297,6 @@
                 return { ...route, liveData: live, distance: distance };
             });
 
-            // فلترة حسب البحث
             if (searchQ) {
                 displayDrivers = displayDrivers.filter(d => 
                     (d.driver_name && d.driver_name.toLowerCase().includes(searchQ)) || 
@@ -311,7 +304,6 @@
                 );
             }
 
-            // ترتيب حسب المسافة (الأقرب أولاً)
             displayDrivers.sort((a, b) => {
                 if (a.distance === null) return 1;
                 if (b.distance === null) return -1;
@@ -341,7 +333,7 @@
                         </div>
                         ${distanceText}
                     </div>
-                    <div class="contact-actions" onclick="event.stopPropagation()"> <!-- منع ضغط الزر من تفعيل الخريطة -->
+                    <div class="contact-actions" onclick="event.stopPropagation()">
                         <a href="tel:${cleanPhone}" class="btn-call"><i class="fas fa-phone-alt"></i> اتصال</a>
                         <a href="https://wa.me/${waPhone}?text=${waMessage}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i> واتساب</a>
                     </div>
@@ -350,13 +342,13 @@
             }).join('');
         }
 
-        // التركيز على السائق في الخريطة عند الضغط على الكارد
         function focusOnDriver(phone, lat, lng) {
             document.querySelectorAll('.driver-card').forEach(el => el.classList.remove('highlight'));
-            document.getElementById(`card_${phone}`).classList.add('highlight');
+            const card = document.getElementById(`card_${phone}`);
+            if(card) card.classList.add('highlight');
             
             if(lat && lng) {
-                closeSheet(); // إغلاق القائمة إذا كان يريد رؤية الخريطة
+                closeSheet();
                 map.flyTo([parseFloat(lat), parseFloat(lng)], 16, { animate: true, duration: 1.5 });
                 if(busMarkers[phone]) busMarkers[phone].openPopup();
             } else {
@@ -364,13 +356,11 @@
             }
         }
 
-        // تتبع الباصات
-        const busMarkers = {};
-        async function loadLiveBuses() {
+        // جلب السائقين وتحديث الخريطة
+        async function fetchLiveBuses() {
             const { data } = await sb.from('live_buses').select('*');
-            liveDrivers = data || []; // حفظ بيانات السائقين المباشرين للترتيب
+            liveDrivers = data || [];
             
-            // تحديث العداد
             const counter = document.getElementById('liveCounter');
             const countText = document.getElementById('busCount');
             if(liveDrivers.length > 0) {
@@ -380,52 +370,40 @@
                 counter.style.display = 'none';
             }
 
-            liveDrivers.forEach(drawBus);
+            // مسح كل الماركرات القديمة
+            for (let phone in busMarkers) {
+                map.removeLayer(busMarkers[phone]);
+                delete busMarkers[phone];
+            }
+
+            // إعادة رسم الماركرات
+            liveDrivers.forEach(bus => {
+                if (!bus?.lat || !bus?.lng) return;
+                const lat = parseFloat(bus.lat);
+                const lng = parseFloat(bus.lng);
+                busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: busIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}`)
+                    .on('click', () => {
+                        const cleanPhone = bus.driver_phone.replace(/\s+/g, '');
+                        openDriversList();
+                        setTimeout(() => {
+                            const card = document.getElementById(`card_${cleanPhone}`);
+                            if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                    });
+            });
+
+            if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
+        }
+
+        function loadLiveBuses() {
+            fetchLiveBuses(); // جلب أولي
 
             sb.channel('live_buses_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
-                    if (payload.eventType === 'DELETE') {
-                        if (busMarkers[payload.old.driver_phone]) { map.removeLayer(busMarkers[payload.old.driver_phone]); delete busMarkers[payload.old.driver_phone]; }
-                        liveDrivers = liveDrivers.filter(d => d.driver_phone !== payload.old.driver_phone);
-                    } else { 
-                        drawBus(payload.new); 
-                        const idx = liveDrivers.findIndex(d => d.driver_phone === payload.new.driver_phone);
-                        if(idx > -1) liveDrivers[idx] = payload.new;
-                        else liveDrivers.push(payload.new);
-                    }
-                    
-                    // تحديث العداد والقائمة
-                    if(liveDrivers.length > 0) {
-                        document.getElementById('liveCounter').style.display = 'flex';
-                        document.getElementById('busCount').textContent = liveDrivers.length;
-                    } else {
-                        document.getElementById('liveCounter').style.display = 'none';
-                    }
-                    if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
+                    fetchLiveBuses(); // تحديث شامل عند أي تغيير (إضافة، تعديل، حذف)
                 }).subscribe();
-        }
-
-        function drawBus(bus) {
-            if (!bus?.lat || !bus?.lng) return;
-            const lat = parseFloat(bus.lat);
-            const lng = parseFloat(bus.lng);
-            
-            if (busMarkers[bus.driver_phone]) {
-                busMarkers[bus.driver_phone].setLatLng([lat, lng]);
-            } else {
-                busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: busIcon })
-                .addTo(map)
-                .bindPopup(`<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}`)
-                .on('click', () => {
-                    // عند الضغط على الباص في الخريطة، نفتح القائمة ونحدد الكارد
-                    const cleanPhone = bus.driver_phone.replace(/\s+/g, '');
-                    openDriversList();
-                    setTimeout(() => {
-                        const card = document.getElementById(`card_${cleanPhone}`);
-                        if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 300);
-                });
-            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
