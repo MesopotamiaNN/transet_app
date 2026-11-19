@@ -38,7 +38,9 @@
         body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
         
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
-        body.dark-mode #map { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        
+        /* إصلاح الوضع الليلي: الفلتر يطبق فقط على خريطة الشوارع وليس على أيقونات الباصات */
+        body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
         .welcome-bar {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
@@ -84,7 +86,7 @@
         .list-container { padding: 0 20px 100px 20px; overflow-y: auto; flex: 1; }
         .list-container::-webkit-scrollbar { display: none; }
 
-        .driver-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-sm); transition: 0.2s; }
+        .driver-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-sm); }
         .driver-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .driver-avatar { width: 45px; height: 45px; background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-left: 15px; }
         .driver-info { flex: 1; }
@@ -102,6 +104,7 @@
         #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
         .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
         .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-right-color: var(--danger); }
 
         .empty-state { text-align: center; margin-top: 50px; }
         .empty-state i { font-size: 4rem; color: var(--text-muted); margin-bottom: 15px; opacity: 0.5; }
@@ -226,7 +229,6 @@
             const { data } = await sb.from('routes').select('*').eq('active', true);
             allDrivers = data || [];
             
-            // استخراج جميع المناطق للفلترة (نفصل بينها بفاصلة)
             let areasSet = new Set();
             allDrivers.forEach(d => {
                 if(d.area) d.area.split(/[،,]/).forEach(a => areasSet.add(a.trim()));
@@ -248,7 +250,6 @@
             if (filtered.length === 0) return list.innerHTML = '<div class="empty-state"><i class="fas fa-bus-slash"></i><p>لا يوجد سائقون متاحون في هذه المنطقة</p></div>';
 
             list.innerHTML = filtered.map(route => {
-                // تجهيز رقم الهاتف للاتصال والواتساب
                 const cleanPhone = route.driver_phone.replace(/\s+/g, '');
                 const waPhone = cleanPhone.startsWith('0') ? '964' + cleanPhone.substring(1) : '964' + cleanPhone;
                 const waMessage = encodeURIComponent(`مرحباً كابتن ${route.driver_name}، أنا طالب من جامعة الناجي. هل لديك مقعد شاغر في خط (${route.area})؟`);
@@ -273,23 +274,45 @@
             }).join('');
         }
 
-        // تتبع الباصات على الخريطة
+        // تتبع الباصات
         const busMarkers = {};
         async function loadLiveBuses() {
-            const { data } = await sb.from('live_buses').select('*');
-            (data || []).forEach(drawBus);
+            const { data, error } = await sb.from('live_buses').select('*');
+            if (error) console.error("خطأ في جلب السائقين:", error);
+            
+            if (data && data.length > 0) {
+                let bounds = L.latLngBounds();
+                data.forEach(bus => {
+                    drawBus(bus);
+                    if(bus.lat && bus.lng) bounds.extend([bus.lat, bus.lng]);
+                });
+                // توسيع الخريطة تلقائياً لتشمل كل السائقين
+                if(bounds.isValid()) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+            }
+
             sb.channel('live_buses_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
                     if (payload.eventType === 'DELETE') {
                         if (busMarkers[payload.old.driver_phone]) { map.removeLayer(busMarkers[payload.old.driver_phone]); delete busMarkers[payload.old.driver_phone]; }
-                    } else { drawBus(payload.new); }
+                    } else { 
+                        drawBus(payload.new); 
+                        map.flyTo([payload.new.lat, payload.new.lng], 15, { animate: true, duration: 1.5 }); // طيران لأول سائق يظهر
+                    }
                 }).subscribe();
         }
 
         function drawBus(bus) {
             if (!bus?.lat || !bus?.lng) return;
-            if (busMarkers[bus.driver_phone]) busMarkers[bus.driver_phone].setLatLng([bus.lat, bus.lng]);
-            else busMarkers[bus.driver_phone] = L.marker([bus.lat, bus.lng], { icon: busIcon }).addTo(map).bindPopup(`<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}`);
+            const lat = parseFloat(bus.lat);
+            const lng = parseFloat(bus.lng);
+            
+            if (busMarkers[bus.driver_phone]) {
+                busMarkers[bus.driver_phone].setLatLng([lat, lng]);
+            } else {
+                busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: busIcon })
+                .addTo(map)
+                .bindPopup(`<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}`);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
