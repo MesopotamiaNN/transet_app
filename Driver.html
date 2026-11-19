@@ -2,234 +2,359 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>لوحة السائق - جامعة الناجي</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  :root { --primary:#1e3a8a; --primary-light:#3b82f6; --accent:#8b5cf6; --success:#10b981; --danger:#ef4444; --bg:#f0f4ff; --text:#1f2937; --shadow:0 8px 32px rgba(0,0,0,0.08); }
-  *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;}
-  body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
-  .top-bar{background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 15px rgba(0,0,0,0.05);position:sticky;top:0;z-index:1000;}
-  .top-bar h1{font-size:1.1rem;color:var(--primary);font-weight:900;display:flex;align-items:center;gap:10px;}
-  .back-btn{text-decoration:none;color:#fff;background:var(--primary);padding:8px 15px;border-radius:50px;font-weight:700;font-size:0.85rem;}
-  .container{max-width:600px;margin:20px auto;padding:0 15px;}
-  .card{background:#fff;border-radius:20px;padding:25px;box-shadow:var(--shadow);margin-bottom:20px;}
-  .card h2{color:var(--primary);margin-bottom:20px;font-size:1.1rem;display:flex;align-items:center;gap:8px;}
-  .field{margin-bottom:15px;}
-  .field label{display:block;font-size:0.85rem;font-weight:800;margin-bottom:6px;}
-  .field input{width:100%;padding:12px 16px;border:2px solid #e5e7eb;border-radius:12px;font-size:0.95rem;font-weight:700;outline:none;font-family:'Cairo';}
-  .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:900;cursor:pointer;font-family:'Cairo';transition:0.2s;}
-  .btn-primary{background:var(--primary);color:#fff;}
-  .btn-start{background:var(--success);color:#fff;}
-  .btn-stop{background:var(--danger);color:#fff;}
-  #map{height:300px;border-radius:15px;margin-bottom:15px;}
-  
-  .booking-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:10px; }
-  .booking-item h4 { color:var(--primary); margin-bottom:5px; }
-  .booking-item p { font-size:0.85rem; color:#64748b; margin-bottom:10px; }
-  .booking-actions { display:flex; gap:10px; }
-  .btn-accept { background:var(--success); color:white; padding:8px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; flex:1; }
-  .btn-reject { background:var(--danger); color:white; padding:8px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; flex:1; }
+    :root {
+        --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6;
+        --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+        --bg: #f0f4ff; --white: #ffffff; --text: #1f2937; --text-muted: #64748b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body, html { height: 100%; overflow: hidden; background: var(--bg); }
+    
+    /* شاشة التسجيل */
+    #setupScreen { position: absolute; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+    .setup-card { background: var(--white); padding: 30px 20px; border-radius: 24px; width: 100%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+    .setup-card h2 { color: var(--primary); text-align: center; margin-bottom: 25px; font-size: 1.4rem; font-weight: 900; }
+    .field { margin-bottom: 15px; }
+    .field label { display: block; font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+    .field input { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem; font-weight: 700; outline: none; font-family: 'Cairo'; transition: 0.3s; background: #f8fafc; }
+    .field input:focus { border-color: var(--primary-light); background: var(--white); }
+    .btn-main { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 900; font-family: 'Cairo'; cursor: pointer; transition: 0.3s; box-shadow: 0 6px 15px rgba(30,58,138,0.3); margin-top: 10px; }
+    .btn-main:active { transform: scale(0.95); }
+
+    /* الخريطة */
+    #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+    /* شريط التنقل السفلي (زجاجي) */
+    .bottom-nav {
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+        width: 92%; max-width: 400px; height: 65px; background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px); z-index: 2000; border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; justify-content: space-around; align-items: center;
+        border: 1px solid rgba(255,255,255,0.6); padding: 0 10px; display: none;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 700; cursor: pointer; width: 33%; height: 100%; transition: 0.3s; }
+    .nav-item i { font-size: 1.4rem; margin-bottom: 4px; transition: 0.3s; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active i { transform: translateY(-2px); }
+    .nav-item.end-trip { color: var(--danger); }
+
+    /* القائمة السفلية */
+    .bottom-sheet {
+        position: absolute; bottom: -100%; left: 0; width: 100%; height: 65%;
+        background: var(--white); z-index: 1500; border-radius: 30px 30px 0 0;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.15); transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        display: flex; flex-direction: column;
+    }
+    .bottom-sheet.open { bottom: 0; }
+    .drag-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 5px; margin: 10px auto 0; }
+    .sheet-header { padding: 10px 20px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+    .sheet-header h2 { font-size: 1.1rem; color: var(--primary); font-weight: 900; display: flex; align-items: center; gap: 8px; }
+    .close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--text-muted); }
+    .list-container { padding: 15px 20px 100px 20px; overflow-y: auto; flex: 1; }
+
+    /* كرت الحجز */
+    .booking-card { background: var(--white); border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .booking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px; }
+    .booking-header h4 { color: var(--primary); font-size: 1.05rem; display: flex; align-items: center; gap: 6px; }
+    .booking-details { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
+    .booking-actions { display: flex; gap: 10px; }
+    .btn-accept { flex: 1; background: var(--success); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 800; font-family: 'Cairo'; cursor: pointer; transition: 0.3s; }
+    .btn-reject { flex: 1; background: #fee2e2; color: var(--danger); border: none; padding: 10px; border-radius: 10px; font-weight: 800; font-family: 'Cairo'; cursor: pointer; transition: 0.3s; }
+    .btn-accept:active, .btn-reject:active { transform: scale(0.95); }
+
+    /* حالة الرحلة */
+    .status-badge { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 50px; font-weight: 900; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: 0.3s; border: 1px solid rgba(255,255,255,0.5); }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+    .status-badge.live { color: var(--success); }
+    .status-badge.live .status-dot { background: var(--success); animation: pulse 1.5s infinite; box-shadow: 0 0 10px var(--success); }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+
+    /* الإشعارات */
+    #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
+    .toast { background: var(--white); color: var(--text); padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transform: translateY(-20px); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-right: 4px solid var(--primary); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-right-color: var(--success); }
+    .toast.error { border-right-color: var(--danger); }
+    .toast.new-booking { border-right-color: var(--accent); }
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-  <h1><i class="fas fa-user-tie"></i> لوحة السائق</h1>
-  <a href="index.html" class="back-btn">رجوع</a>
-</div>
+    <!-- شاشة التسجيل -->
+    <div id="setupScreen">
+        <div class="setup-card">
+            <h2><i class="fas fa-id-card"></i> تسجيل السائق</h2>
+            <div class="field"><label>الاسم الكامل</label><input id="fName" placeholder="مثال: أحمد علي"></div>
+            <div class="field"><label>رقم الهاتف</label><input id="fPhone" type="tel" placeholder="07XXXXXXXXX"></div>
+            <div class="field"><label>المنطقة / الخط</label><input id="fArea" placeholder="مثال: اليرموك"></div>
+            <div class="field"><label>نوع السيارة</label><input id="fCar" placeholder="مثال: كيا باص"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="field" style="flex:1;"><label>المقاعد</label><input id="fSeats" type="number" value="4"></div>
+                <div class="field" style="flex:1;"><label>السعر (د.ع)</label><input id="fPrice" type="number" value="50000"></div>
+            </div>
+            <div class="field"><label>وقت الانطلاق</label><input id="fTime" placeholder="07:00 صباحاً"></div>
+            <button class="btn-main" onclick="saveDriver()">حفظ ومتابعة</button>
+        </div>
+    </div>
 
-<!-- شاشة التسجيل -->
-<div id="setupScreen" class="container">
-  <div class="card">
-    <h2><i class="fas fa-id-card"></i> بياناتك كسائق</h2>
-    <div class="field"><label>الاسم</label><input id="fName" placeholder="اسمك"></div>
-    <div class="field"><label>الهاتف</label><input id="fPhone" placeholder="07XXXXXXXXX"></div>
-    <div class="field"><label>المنطقة</label><input id="fArea" placeholder="المنطقة"></div>
-    <div class="field"><label>السيارة</label><input id="fCar" placeholder="نوع السيارة"></div>
-    <div class="field"><label>المقاعد</label><input id="fSeats" type="number" value="4"></div>
-    <div class="field"><label>السعر</label><input id="fPrice" type="number" value="50000"></div>
-    <div class="field"><label>وقت الانطلاق</label><input id="fTime" placeholder="07:00 صباحاً"></div>
-    <button class="btn btn-primary" onclick="saveDriver()">حفظ ومتابعة</button>
-  </div>
-</div>
-
-<!-- لوحة التحكم -->
-<div id="dashboard" class="container" style="display:none;">
-  <div class="card">
+    <!-- لوحة التحكم -->
     <div id="map"></div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <div><span id="statusText" style="font-weight:900;">متوقف</span></div>
-      <button id="toggleBtn" class="btn btn-start" style="width:auto; padding:10px 25px;" onclick="toggleTrip()">بدء الرحلة</button>
+    
+    <div class="status-badge" id="statusBadge" style="display: none;">
+        <span class="status-dot"></span> <span id="statusText">أنت متصل (مباشر)</span>
     </div>
-  </div>
 
-  <!-- قسم الحجوزات -->
-  <div class="card">
-    <h2><i class="fas fa-bell"></i> طلبات الحجز</h2>
-    <div id="bookingsList">
-      <p style="text-align:center; color:#666;">لا توجد حجوزات حالياً.</p>
+    <!-- القائمة السفلية للحجوزات -->
+    <div class="bottom-sheet" id="mainSheet">
+        <div class="drag-handle"></div>
+        <div class="sheet-header">
+            <h2><i class="fas fa-bell"></i> طلبات الحجز</h2>
+            <button class="close-btn" onclick="closeSheet()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="list-container" id="bookingsList">
+            <p style="text-align:center; color:var(--text-muted); margin-top:30px; font-weight:700;">لا توجد طلبات حالياً.</p>
+        </div>
     </div>
-  </div>
-</div>
 
-<script>
-const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
-const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let driver = null;
-let watchId = null;
-let isLive = false;
-let map, myMarker;
-const studentMarkers = {};
-
-// ───────── الحفظ ─────────
-async function saveDriver() {
-  const name = document.getElementById('fName').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const area = document.getElementById('fArea').value.trim();
-  const car = document.getElementById('fCar').value.trim();
-  const seats = parseInt(document.getElementById('fSeats').value) || 4;
-  const price = parseInt(document.getElementById('fPrice').value) || 0;
-  const time = document.getElementById('fTime').value.trim();
-
-  if (!name || !phone || !area) return alert('الاسم والهاتف والمنطقة مطلوبة');
-
-  driver = { name, phone, area, car, seats, price, time };
-  localStorage.setItem('driver', JSON.stringify(driver));
-
-  const { error } = await sb.from('routes').upsert({
-    driver_phone: phone, driver_name: name, car, area,
-    total_seats: seats, available_seats: seats, price, time, active: true
-  }, { onConflict: 'driver_phone' });
-
-  if (error) { alert('خطأ: ' + error.message); return; }
-  openDashboard();
-}
-
-function openDashboard() {
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-
-  map = L.map('map').setView([33.2765, 44.3380], 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  
-  loadBookings(); // جلب الحجوزات
-}
-
-// ───────── إدارة الحجوزات (الجزء الجديد) ─────────
-async function loadBookings() {
-  // جلب الحجوزات المعلقة
-  const { data, error } = await sb.from('bookings')
-    .select('*')
-    .eq('driver_phone', driver.phone)
-    .eq('status', 'pending');
-
-  const list = document.getElementById('bookingsList');
-  
-  if (!data || data.length === 0) {
-    list.innerHTML = '<p style="text-align:center; color:#666;">لا توجد حجوزات حالياً.</p>';
-    return;
-  }
-
-  list.innerHTML = data.map(b => `
-    <div class="booking-item" id="book_${b.id}">
-      <h4><i class="fas fa-user"></i> ${b.student_name}</h4>
-      <p><i class="fas fa-phone"></i> ${b.student_phone}</p>
-      <div class="booking-actions">
-        <button class="btn-accept" onclick="handleBooking('${b.id}', 'accepted')">قبول</button>
-        <button class="btn-reject" onclick="handleBooking('${b.id}', 'rejected')">رفض</button>
-      </div>
+    <!-- شريط التنقل السفلي للسائق -->
+    <div class="bottom-nav" id="driverNav">
+        <div class="nav-item active" onclick="closeSheet()">
+            <i class="fas fa-map-marked-alt"></i> الخريطة
+        </div>
+        <div class="nav-item" onclick="openBookings()">
+            <i class="fas fa-bell"></i> الحجوزات <span id="notifDot" style="display:none; background:red; width:8px; height:8px; border-radius:50%; position:absolute; top:10px; right:25px;"></span>
+        </div>
+        <div class="nav-item end-trip" onclick="stopTrip()">
+            <i class="fas fa-power-off"></i> إنهاء
+        </div>
     </div>
-  `).join('');
 
-  // الاستماع لأي حجز جديد يصل
-  sb.channel('bookings_channel')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `driver_phone=eq.${driver.phone}` }, payload => {
-        loadBookings(); // تحديث القائمة فوراً
-    }).subscribe();
-}
+    <div id="toastContainer"></div>
 
-async function handleBooking(bookingId, status) {
-  // 1. تحديث حالة الحجز
-  await sb.from('bookings').update({ status: status }).eq('id', bookingId);
-  
-  // 2. إذا تم القبول، قلل عدد المقاعد المتاحة
-  if (status === 'accepted') {
-     const { data: route } = await sb.from('routes').select('available_seats').eq('driver_phone', driver.phone).single();
-     if (route && route.available_seats > 0) {
-        await sb.from('routes').update({ available_seats: route.available_seats - 1 }).eq('driver_phone', driver.phone);
-     }
-     // إظهار موقع الطالب على الخريطة
-     const { data: b } = await sb.from('bookings').select('*').eq('id', bookingId).single();
-     if (b && b.student_lat) {
-        if(studentMarkers[bookingId]) map.removeLayer(studentMarkers[bookingId]);
-        studentMarkers[bookingId] = L.marker([b.student_lat, b.student_lng], {icon: L.divIcon({className:'', html:'<div style="background:var(--accent); color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-user"></i></div>'})})
-        .addTo(map).bindPopup(`<b>${b.student_name}</b><br>موقع الحجز`);
-        map.flyTo([b.student_lat, b.student_lng], 15);
-     }
-  }
+    <script>
+        // 1. إعداد الخريطة
+        const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.control.zoom({ position: 'topright' }).addTo(map);
 
-  document.getElementById(`book_${bookingId}`).remove(); // إخفاء من القائمة
-}
+        // أيقونات الخريطة
+        const busIcon = L.divIcon({
+            className: 'custom-bus-icon',
+            html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 15px rgba(0,0,0,0.4);"><i class="fas fa-bus" style="font-size:18px;"></i></div>',
+            iconSize: [40, 40], iconAnchor: [20, 20]
+        });
+        
+        const studentIcon = L.divIcon({
+            className: 'custom-student-icon',
+            html: '<div style="background:#8b5cf6; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 15px rgba(0,0,0,0.4);"><i class="fas fa-user-graduate" style="font-size:16px;"></i></div>',
+            iconSize: [35, 35], iconAnchor: [17, 17]
+        });
 
-// ───────── بدء / إيقاف الرحلة (GPS) ─────────
-async function toggleTrip() { isLive ? stopTrip() : startTrip(); }
+        let driver = null;
+        let watchId = null;
+        let isLive = false;
+        let myMarker = null;
+        const studentMarkers = {};
 
-async function startTrip() {
-  if (!navigator.geolocation) return alert('جهازك لا يدعم تحديد الموقع');
-  
-  watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true });
-  isLive = true;
-  
-  const btn = document.getElementById('toggleBtn');
-  document.getElementById('statusText').textContent = 'مباشر الآن';
-  btn.textContent = 'إيقاف الرحلة';
-  btn.className = 'btn btn-stop';
-  btn.style.width = 'auto'; btn.style.padding = '10px 25px';
-}
+        // 2. إعداد Supabase
+        const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
+        const SUPABASE_KEY = "ضع_المفتاح_anon_هنا";
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function stopTrip() {
-  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  isLive = false;
-  await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
-  
-  const btn = document.getElementById('toggleBtn');
-  document.getElementById('statusText').textContent = 'متوقف';
-  btn.textContent = 'بدء الرحلة';
-  btn.className = 'btn btn-start';
-  btn.style.width = 'auto'; btn.style.padding = '10px 25px';
-}
+        // 3. الإشعارات
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = 'fa-check-circle';
+            if(type === 'error') icon = 'fa-exclamation-circle';
+            if(type === 'new-booking') icon = 'fa-bell';
+            
+            toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+        }
 
-let lastSent = 0;
-async function onPosition(pos) {
-  const { latitude: lat, longitude: lng } = pos.coords;
-  if (!myMarker) {
-    myMarker = L.marker([lat, lng], {icon: L.divIcon({className:'', html:'<div style="background:#1e3a8a; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:3px solid white;"><i class="fas fa-bus"></i></div>'})}).addTo(map);
-    map.setView([lat, lng], 15);
-  } else { myMarker.setLatLng([lat, lng]); map.panTo([lat, lng]); }
+        // 4. حفظ بيانات السائق
+        async function saveDriver() {
+            const name = document.getElementById('fName').value.trim();
+            const phone = document.getElementById('fPhone').value.trim();
+            const area = document.getElementById('fArea').value.trim();
+            const car = document.getElementById('fCar').value.trim();
+            const seats = parseInt(document.getElementById('fSeats').value) || 4;
+            const price = parseInt(document.getElementById('fPrice').value) || 0;
+            const time = document.getElementById('fTime').value.trim();
 
-  const now = Date.now();
-  if (now - lastSent < 2000) return;
-  lastSent = now;
+            if (!name || !phone || !area) return showToast('الاسم والهاتف والمنطقة مطلوبة', 'error');
 
-  await sb.from('live_buses').upsert({
-    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, lat, lng,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'driver_phone' });
-}
+            driver = { name, phone, area, car, seats, price, time };
+            localStorage.setItem('driver', JSON.stringify(driver));
 
-function onError(err) { console.error(err); }
+            // حفظ أو تحديث في قاعدة البيانات
+            const { error } = await sb.from('routes').upsert({
+                driver_phone: phone, driver_name: name, car, area,
+                total_seats: seats, available_seats: seats, price, time, active: true
+            }, { onConflict: 'driver_phone' });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('driver');
-  if (saved) { driver = JSON.parse(saved); openDashboard(); }
-});
-</script>
+            if (error) return showToast('خطأ في الحفظ: ' + error.message, 'error');
+            
+            startDashboard();
+        }
+
+        // 5. بدء لوحة التحكم
+        function startDashboard() {
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('driverNav').style.display = 'flex';
+            document.getElementById('statusBadge').style.display = 'flex';
+            
+            setTimeout(() => map.invalidateSize(), 200); // تحديث حجم الخريطة
+            startTrip(); // يبدأ الرحلة تلقائياً
+            listenToBookings(); // الاستماع للحجوزات
+        }
+
+        // 6. إدارة الواجهة
+        function closeSheet() { document.getElementById('mainSheet').classList.remove('open'); }
+        function openBookings() { 
+            document.getElementById('mainSheet').classList.add('open'); 
+            document.getElementById('notifDot').style.display = 'none'; // إخفاء نقطة التنبيه
+        }
+
+        // 7. تتبع الموقع (GPS)
+        function startTrip() {
+            if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
+            
+            watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0 });
+            isLive = true;
+            document.getElementById('statusBadge').classList.add('live');
+            showToast('تم بدء الرحلة، أنت الآن مباشر!', 'success');
+        }
+
+        async function stopTrip() {
+            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            isLive = false;
+            
+            // إخفاء السائق من جدول live_buses
+            await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
+            
+            document.getElementById('statusBadge').classList.remove('live');
+            document.getElementById('statusText').textContent = 'تم إنهاء الرحلة';
+            document.getElementById('driverNav').style.display = 'none';
+            showToast('تم إنهاء الرحلة بنجاح', 'success');
+            
+            setTimeout(() => { window.location.reload(); }, 1500); // إعادة تحميل الصفحة
+        }
+
+        let lastSent = 0;
+        async function onPosition(pos) {
+            const { latitude: lat, longitude: lng } = pos.coords;
+
+            // تحديث علامة السائق على خريطته
+            if (!myMarker) {
+                myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map).bindPopup("<b>أنت هنا</b>");
+                map.setView([lat, lng], 16);
+            } else {
+                myMarker.setLatLng([lat, lng]);
+            }
+
+            // إرسال الموقع لـ Supabase كل ثانيتين
+            const now = Date.now();
+            if (now - lastSent < 2000) return;
+            lastSent = now;
+
+            await sb.from('live_buses').upsert({
+                driver_phone: driver.phone, driver_name: driver.name, area: driver.area, lat, lng,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'driver_phone' });
+        }
+
+        function onError(err) { showToast('تعذر جلب الموقع. تأكد من الـ GPS.', 'error'); }
+
+        // 8. إدارة الحجوزات
+        async function listenToBookings() {
+            loadBookings(); // تحميل أولي
+
+            // الاستماع لحظياً لأي حجز جديد يخص هذا السائق
+            sb.channel('driver_bookings')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `driver_phone=eq.${driver.phone}` }, payload => {
+                    showToast('وصلك طلب حجز جديد!', 'new-booking');
+                    document.getElementById('notifDot').style.display = 'block'; // إظهار النقطة الحمراء
+                    loadBookings(); // تحديث القائمة
+                }).subscribe();
+        }
+
+        async function loadBookings() {
+            const { data, error } = await sb.from('bookings')
+                .select('*')
+                .eq('driver_phone', driver.phone)
+                .eq('status', 'pending'); // عرض المعلقة فقط
+
+            const list = document.getElementById('bookingsList');
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div style="text-align:center; margin-top:40px;"><i class="fas fa-check-circle" style="font-size:3rem; color:#cbd5e1; margin-bottom:10px;"></i><p style="color:var(--text-muted); font-weight:700;">لا توجد طلبات جديدة حالياً.</p></div>';
+                return;
+            }
+
+            list.innerHTML = data.map(b => `
+                <div class="booking-card" id="book_${b.id}">
+                    <div class="booking-header">
+                        <h4><i class="fas fa-user-graduate"></i> ${b.student_name}</h4>
+                        <span style="font-size:0.8rem; color:var(--text-muted); background:#f1f5f9; padding:4px 8px; border-radius:6px;">رقم: ${b.student_reg_id}</span>
+                    </div>
+                    <div class="booking-actions">
+                        <button class="btn-accept" onclick="handleBooking('${b.id}', 'accepted', ${b.student_lat}, ${b.student_lng}, '${b.student_name}')">قبول</button>
+                        <button class="btn-reject" onclick="handleBooking('${b.id}', 'rejected')">رفض</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleBooking(id, status, sLat, sLng, sName) {
+            // 1. تحديث حالة الحجز في قاعدة البيانات
+            await sb.from('bookings').update({ status: status }).eq('id', id);
+            
+            // إخفاء الكرت من الشاشة
+            document.getElementById(`book_${id}`).remove();
+
+            if (status === 'accepted') {
+                showToast('تم قبول الطالب بنجاح', 'success');
+                
+                // 2. إنقاص المقاعد المتاحة
+                const { data: route } = await sb.from('routes').select('available_seats').eq('driver_phone', driver.phone).single();
+                if (route && route.available_seats > 0) {
+                    await sb.from('routes').update({ available_seats: route.available_seats - 1 }).eq('driver_phone', driver.phone);
+                }
+
+                // 3. إظهار موقع الطالب على الخريطة
+                if (sLat && sLng) {
+                    if (studentMarkers[id]) map.removeLayer(studentMarkers[id]);
+                    studentMarkers[id] = L.marker([sLat, sLng], { icon: studentIcon })
+                        .addTo(map).bindPopup(`<b>الطالب: ${sName}</b><br>موقع الحجز`);
+                    
+                    map.flyTo([sLat, sLng], 15, { animate: true, duration: 1.5 });
+                    showToast('تم عرض موقع الطالب على الخريطة', 'success');
+                }
+            } else {
+                showToast('تم رفض الطلب', 'error');
+            }
+        }
+
+        // التشغيل التلقائي إذا كان السائق مسجل مسبقاً
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('driver');
+            if (saved) {
+                driver = JSON.parse(saved);
+                startDashboard();
+            }
+        });
+    </script>
 </body>
 </html>
