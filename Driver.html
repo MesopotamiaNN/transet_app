@@ -26,7 +26,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
     body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
     
-    /* شاشة التسجيل */
     #setupScreen { position: absolute; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; transition: 0.3s; }
     .setup-card { background: var(--white); padding: 35px 25px; border-radius: 30px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); position: relative; }
     .setup-card h2 { color: var(--text); text-align: center; margin-bottom: 25px; font-size: 1.5rem; font-weight: 900; }
@@ -39,20 +38,17 @@
 
     .setup-theme-btn { position: absolute; top: 20px; left: 20px; background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* الخريطة */
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
-    body.dark-mode #map { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+    body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
     .map-controls { position: absolute; bottom: 170px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
     .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
     .control-btn:active { transform: scale(0.85); }
 
-    /* شريط التنقل (أصبح زر إنهاء فقط) */
-    .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px; box-shadow: var(--shadow-lg); display: none; justify-content: center; align-items: center; border: 1px solid var(--border-light); padding: 0 10px; transition: 0.3s; }
+    .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px; box-shadow: var(--shadow-lg); display: none; justify-content: center; align-items: center; border: 1px solid var(--border-light); padding: 0 10px; transition: 0.3s; }
     .nav-item { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--danger); font-size: 1rem; font-weight: 900; cursor: pointer; width: 100%; height: 100%; transition: 0.3s var(--spring); }
     .nav-item i { font-size: 1.4rem; }
 
-    /* حالة الرحلة الحية */
     .status-badge { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: var(--nav-bg); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 50px; font-weight: 900; display: none; align-items: center; gap: 10px; font-size: 0.9rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border-light); color: var(--text); transition: 0.3s; }
     .radar-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--success); position: relative; }
     .status-badge.live { color: var(--success); }
@@ -63,6 +59,7 @@
     .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.error { border-right-color: var(--danger); }
+    .toast.success { border-right-color: var(--success); }
 </style>
 </head>
 <body>
@@ -135,7 +132,7 @@
             toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}" style="color:${type === 'error' ? 'var(--danger)' : 'var(--success)'}; font-size:1.2rem;"></i> <span>${message}</span>`;
             document.getElementById('toastContainer').appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
         }
 
         async function saveDriver() {
@@ -153,13 +150,17 @@
             localStorage.setItem('driver', JSON.stringify(driver));
 
             try {
-                // حفظ أو تحديث بيانات السائق
+                showToast('جاري حفظ البيانات...', 'success');
                 const { error } = await sb.from('routes').upsert({ 
                     driver_phone: phone, driver_name: name, car, area, 
                     total_seats: seats, available_seats: seats, price, time, active: true 
                 }, { onConflict: 'driver_phone' });
                 if (error) throw error;
-            } catch (err) { showToast('فشل الاتصال بقاعدة البيانات', 'error'); }
+                showToast('تم الحفظ بنجاح!', 'success');
+            } catch (err) { 
+                console.error("خطأ في حفظ البيانات:", err);
+                showToast('فشل الحفظ: ' + err.message, 'error'); 
+            }
             
             startDashboard();
         }
@@ -175,9 +176,14 @@
 
         function startTrip() {
             if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
-            watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true });
+            
+            showToast('جاري طلب إذن الموقع...', 'success');
+            watchId = navigator.geolocation.watchPosition(
+                onPosition, 
+                onError, 
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+            );
             document.getElementById('statusBadge').classList.add('live');
-            showToast('تم بدء الرحلة، أنت الآن مباشر!');
         }
 
         async function stopTrip() {
@@ -197,13 +203,38 @@
             else { myMarker.setLatLng([lat, lng]); }
 
             const now = Date.now();
-            if (now - lastSent < 2000) return;
+            if (now - lastSent < 3000) return; // كل 3 ثواني
             lastSent = now;
 
-            await sb.from('live_buses').upsert({ driver_phone: driver.phone, driver_name: driver.name, area: driver.area, lat, lng, updated_at: new Date().toISOString() }, { onConflict: 'driver_phone' });
+            console.log("محاولة إرسال الموقع:", lat, lng);
+
+            try {
+                const { error } = await sb.from('live_buses').upsert({ 
+                    driver_phone: driver.phone, 
+                    driver_name: driver.name, 
+                    area: driver.area, 
+                    lat, lng, 
+                    updated_at: new Date().toISOString() 
+                }, { onConflict: 'driver_phone' });
+
+                if (error) {
+                    console.error("خطأ أثناء الإرسال:", error);
+                    showToast('خطأ في الإرسال: ' + error.message, 'error');
+                } else {
+                    console.log("تم إرسال الموقع بنجاح!");
+                }
+            } catch (err) {
+                console.error("خطأ غير متوقع:", err);
+            }
         }
 
-        function onError(err) { showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); }
+        function onError(err) { 
+            console.error("خطأ في GPS:", err);
+            let msg = 'تعذر جلب الموقع';
+            if(err.code === 1) msg = 'أنت رفضت إذن الوصول للموقع. يرجى السماح به من إعدادات المتصفح.';
+            if(err.code === 2) msg = 'إشارة الـ GPS ضعيفة. تأكد من تشغيل الموقع في الهاتف.';
+            showToast(msg, 'error'); 
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('driver');
