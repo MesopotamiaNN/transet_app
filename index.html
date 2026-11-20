@@ -46,8 +46,6 @@
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
         body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
         .leaflet-control-attribution { display: none !important; }
-
-        /* رفع أزرار التكبير والتصغير لتكون فوق الشريط السفلي */
         .leaflet-bottom.leaflet-left { bottom: 105px !important; }
         .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-md) !important; border-radius: 12px !important; overflow: hidden; }
         .leaflet-control-zoom a { background: var(--white) !important; color: var(--text) !important; border-bottom: 1px solid var(--border-light) !important; }
@@ -71,7 +69,6 @@
             display: flex; align-items: center; gap: 6px; pointer-events: auto;
         }
 
-        /* تعديل مكان أزرار اليمين لتكون بنفس مستوى أزرار التكبير */
         .map-controls { position: absolute; bottom: 105px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
         .control-btn { 
             background: var(--white); color: var(--text); width: 50px; height: 50px; 
@@ -81,7 +78,6 @@
         }
         .control-btn:active { transform: scale(0.85); }
 
-        /* الشريط السفلي (أصبح 4 أزرار) */
         .bottom-nav {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg);
@@ -94,7 +90,7 @@
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { transform: translateY(-3px) scale(1.1); }
         .nav-item.test-driver { color: var(--danger); }
-        .nav-item.support { color: #25D366; } /* لون الواتساب */
+        .nav-item.support { color: #25D366; }
 
         .bottom-sheet {
             position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%;
@@ -137,7 +133,8 @@
         .driver-info h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 4px; font-weight: 900; }
         .driver-info p { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 2px; font-weight: 600; }
         
-        .distance-badge { background: rgba(139, 92, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px; }
+        .distance-badge { background: rgba(139, 92, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: left; }
+        .distance-eta { font-size: 0.65rem; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: 6px; width: fit-content; }
 
         .contact-actions { display: flex; gap: 10px; margin-top: 5px; }
         .btn-call { flex: 1; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 14px; font-weight: 800; font-family: 'Cairo'; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; transition: 0.2s; box-shadow: 0 4px 10px rgba(30,58,138,0.2); }
@@ -147,13 +144,27 @@
         .skeleton-card { background: var(--border-light); border-radius: 20px; height: 160px; margin-bottom: 12px; animation: shimmer 1.5s infinite linear; background-image: linear-gradient(to right, var(--border-light) 0%, var(--bg) 20%, var(--border-light) 40%, var(--border-light) 100%); background-size: 800px 100%; }
         @keyframes shimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
 
+        /* إشعارات الطالب */
         #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
         .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
         .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.alert { border-right-color: var(--warning); background: #fffbeb; color: #d97706; }
+        body.dark-mode .toast.alert { background: #451a03; color: #fcd34d; }
 
         .empty-state { text-align: center; margin-top: 50px; }
         .empty-state i { font-size: 4rem; color: var(--text-muted); margin-bottom: 15px; opacity: 0.5; }
         .empty-state p { color: var(--text-muted); font-weight: 800; font-size: 1.1rem; }
+
+        /* أنيميشن نبض الباص القريب */
+        .pulse-close .bus-icon-bg {
+            animation: pulse-green 1.5s infinite;
+            background: #10b981 !important; /* يتحول للأخضر */
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
     </style>
 </head>
 <body>
@@ -169,7 +180,6 @@
         </div>
     </div>
 
-    <!-- أزرار التحكم العائمة (تم إزالة الواتساب منها) -->
     <div class="map-controls">
         <button class="control-btn" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         <button class="control-btn" onclick="locateStudent()"><i class="fas fa-crosshairs"></i></button>
@@ -190,13 +200,11 @@
         <div class="list-container" id="listContainer"></div>
     </div>
 
-    <!-- الشريط السفلي (4 أزرار) -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-map" onclick="closeSheet()"><i class="fas fa-map-marked-alt"></i> الخريطة</div>
         <div class="nav-item" id="nav-drivers" onclick="openDriversList()"><i class="fas fa-bus-alt"></i> السائقين</div>
         
-        <!-- زر الدعم (الواتساب) -->
-        <div class="nav-item support" onclick="window.open('https://wa.me/9647818999997?text=مرحباً، أحتاج إلى دعم فني بخصوص تطبيق خطوط النقل.', '_blank')">
+        <div class="nav-item support" onclick="window.open('https://wa.me/9647700000000?text=مرحباً، أحتاج إلى دعم فني بخصوص تطبيق خطوط النقل.', '_blank')">
             <i class="fab fa-whatsapp"></i> الدعم
         </div>
         
@@ -224,18 +232,28 @@
 
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        // أزرار التكبير في اليسار (سيتم رفعها بـ CSS)
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
-        const carIcon = L.divIcon({ className: 'custom-car-icon', html: '<div style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-car" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+        // إضافة كلاس للباص لكي نتمكن من عمل الأنيميشن عليه
+        const busIcon = L.divIcon({ 
+            className: 'custom-bus-icon', 
+            html: '<div class="bus-icon-bg" style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-bus" style="font-size:14px;"></i></div>', 
+            iconSize: [36, 36], iconAnchor: [18, 18] 
+        });
+        const carIcon = L.divIcon({ 
+            className: 'custom-car-icon', 
+            html: '<div class="bus-icon-bg" style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-car" style="font-size:14px;"></i></div>', 
+            iconSize: [36, 36], iconAnchor: [18, 18] 
+        });
         const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
         let userMarker = null, studentLocation = null, allDrivers = [], liveDrivers = [];
         const busMarkers = {};
         const busPaths = {};
         
+        // لتخزين السائقين الذين تم تنبيه الطالب باقترابهم (لمنع تكرار الإشعار)
+        const notifiedDrivers = new Set();
+
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -245,10 +263,15 @@
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}" style="color:${type === 'success' ? 'var(--success)' : 'var(--danger)'}; font-size:1.2rem;"></i> <span>${message}</span>`;
+            
+            let icon = 'fa-check-circle';
+            if(type === 'error') icon = 'fa-exclamation-circle';
+            if(type === 'alert') icon = 'fa-bell';
+
+            toast.innerHTML = `<i class="fas ${icon}" style="font-size:1.2rem;"></i> <span>${message}</span>`;
             document.getElementById('toastContainer').appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 5000);
         }
 
         async function loadStudentData() {
@@ -263,7 +286,6 @@
 
         function locateStudent() {
             if (!navigator.geolocation) return showToast("جهازك لا يدعم تحديد الموقع", "error");
-            // تم التعديل هنا: الزر الثاني (index 1) لأنه لم يعد هناك زر واتساب في القائمة العائمة
             const btn = document.querySelectorAll('.control-btn')[1].querySelector('i');
             btn.className = 'fas fa-circle-notch fa-spin';
 
@@ -276,6 +298,7 @@
                     btn.className = 'fas fa-crosshairs';
                     showToast("تم تحديد موقعك بنجاح");
                     if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
+                    fetchLiveBuses(); // تحديث فوري لحساب المسافات والإشعارات
                 },
                 (err) => { showToast("تعذر تحديد الموقع", "error"); btn.className = 'fas fa-crosshairs'; },
                 { enableHighAccuracy: true }
@@ -291,7 +314,7 @@
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             if(!lat1 || !lon1 || !lat2 || !lon2) return null;
-            const R = 6371;
+            const R = 6371; // نصف القطر بالكيلومتر
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
@@ -343,7 +366,19 @@
                 const waPhone = cleanPhone.startsWith('0') ? '964' + cleanPhone.substring(1) : '964' + cleanPhone;
                 const waMessage = encodeURIComponent(`مرحباً كابتن ${route.driver_name}، أنا طالب من جامعة الناجي. هل لديك مقعد شاغر في خط (${route.area})؟`);
                 
-                const distanceText = route.distance !== null ? `<div class="distance-badge"><i class="fas fa-location-arrow"></i> يبعد ${route.distance} كم</div>` : `<div class="distance-badge" style="background:transparent; color:var(--text-muted);">غير متصل</div>`;
+                // حساب الوقت المتوقع (بمعدل سرعة 30 كم/ساعة لتقدير واقعي لشوارع بغداد)
+                let etaText = '';
+                let distanceText = '';
+                
+                if (route.distance !== null) {
+                    const etaMinutes = Math.ceil((route.distance / 30) * 60);
+                    distanceText = `<i class="fas fa-location-arrow"></i> ${route.distance} كم`;
+                    etaText = etaMinutes <= 1 ? `<span class="distance-eta" style="color:var(--success); font-weight:900;">وصل الآن</span>` : `<span class="distance-eta">وصول بعد ${etaMinutes} دقيقة</span>`;
+                } else {
+                    distanceText = `غير متصل`;
+                }
+                
+                const distanceHTML = `<div class="distance-badge">${distanceText} ${etaText}</div>`;
                 const isLive = route.liveData ? 'border-right: 4px solid var(--success);' : '';
                 
                 const isBus = route.vehicle_type === 'bus';
@@ -360,7 +395,7 @@
                             <p><i class="fas fa-map-marker-alt" style="color:var(--danger);"></i> ${route.area}</p>
                             <p><i class="fas fa-chair" style="color:var(--warning);"></i> ${route.available_seats} مقاعد | <i class="fas fa-money-bill-wave" style="color:var(--success);"></i> ${route.price} د.ع</p>
                         </div>
-                        ${distanceText}
+                        ${distanceHTML}
                     </div>
                     <div class="contact-actions" onclick="event.stopPropagation()">
                         <a href="tel:${cleanPhone}" class="btn-call"><i class="fas fa-phone-alt"></i> اتصال</a>
@@ -412,11 +447,47 @@
                 const lat = parseFloat(bus.lat);
                 const lng = parseFloat(bus.lng);
                 
-                const iconToUse = bus.vehicle_type === 'bus' ? busIcon : carIcon;
+                // 1. حساب المسافة للتحقق من رادار الاقتراب
+                let distance = null;
+                let etaMins = null;
+                if (studentLocation) {
+                    distance = parseFloat(calculateDistance(studentLocation.lat, studentLocation.lng, lat, lng));
+                    etaMins = Math.ceil((distance / 30) * 60);
+                }
 
+                // 2. التحقق من رادار الاقتراب (أقل من 500 متر)
+                let isClose = false;
+                if (distance !== null && distance <= 0.5) {
+                    isClose = true;
+                    // إظهار إشعار إذا لم نكن قد نبهناه مسبقاً
+                    if (!notifiedDrivers.has(bus.driver_phone)) {
+                        showToast(`🚨 تنبيه: الكابتن ${bus.driver_name} على وشك الوصول إليك!`, 'alert');
+                        notifiedDrivers.add(bus.driver_phone);
+                    }
+                } else if (distance !== null && distance > 0.6) {
+                    // إزالة التنبيه إذا ابتعد الباص لكي نتمكن من تنبيه الطالب مرة أخرى مستقبلاً
+                    notifiedDrivers.delete(bus.driver_phone);
+                }
+
+                // 3. اختيار الأيقونة (تتحول لأخضر نابض إذا كان قريباً)
+                let iconToUse = bus.vehicle_type === 'bus' ? busIcon : carIcon;
+                if (isClose) {
+                    // إنشاء أيقونة خضراء نابضة ديناميكياً
+                    iconToUse = L.divIcon({ 
+                        className: 'custom-bus-icon pulse-close', 
+                        html: `<div class="bus-icon-bg" style="background:#10b981; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas ${bus.vehicle_type === 'bus' ? 'fa-bus' : 'fa-car'}" style="font-size:14px;"></i></div>`, 
+                        iconSize: [36, 36], iconAnchor: [18, 18] 
+                    });
+                }
+
+                // 4. نص الـ Popup
+                const etaPopupText = etaMins !== null ? (etaMins <= 1 ? 'وصل الآن!' : `الوصول بعد ${etaMins} دقيقة`) : 'غير متصل';
+                const popupContent = `<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}<br><span style="color:var(--primary); font-weight:900;">${etaPopupText}</span>`;
+
+                // 5. رسم الباص
                 busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: iconToUse })
                     .addTo(map)
-                    .bindPopup(`<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}`)
+                    .bindPopup(popupContent)
                     .on('click', () => {
                         const cleanPhone = bus.driver_phone.replace(/\s+/g, '');
                         openDriversList();
@@ -426,9 +497,10 @@
                         }, 300);
                     });
 
+                // 6. رسم المسار
                 if (bus.path && bus.path.length > 1) {
                     busPaths[bus.driver_phone] = L.polyline(bus.path, {
-                        color: bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6', 
+                        color: isClose ? '#10b981' : (bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6'), 
                         weight: 4, opacity: 0.7, dashArray: '8, 8', lineJoin: 'round'
                     }).addTo(map);
                 }
