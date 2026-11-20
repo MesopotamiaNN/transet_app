@@ -45,6 +45,7 @@
         
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
         body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        .leaflet-control-attribution { display: none !important; }
 
         .top-bar {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
@@ -66,8 +67,14 @@
         }
 
         .map-controls { position: absolute; bottom: 170px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
-        .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
+        .control-btn { 
+            background: var(--white); color: var(--text); width: 50px; height: 50px; 
+            border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            transition: 0.3s var(--spring); text-decoration: none;
+        }
         .control-btn:active { transform: scale(0.85); }
+        .btn-support { color: #25D366; font-size: 1.5rem; }
 
         .bottom-nav {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -115,7 +122,10 @@
         .driver-card.highlight { border-color: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-light); }
         
         .driver-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .driver-avatar { width: 45px; height: 45px; background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-left: 15px; }
+        .driver-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-left: 15px; }
+        .driver-avatar.bus { background: rgba(30, 58, 138, 0.1); color: #1e3a8a; }
+        .driver-avatar.car { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        
         .driver-info { flex: 1; }
         .driver-info h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 4px; font-weight: 900; }
         .driver-info p { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 2px; font-weight: 600; }
@@ -153,6 +163,9 @@
     </div>
 
     <div class="map-controls">
+        <a href="https://wa.me/9647700000000?text=مرحباً، أحتاج إلى دعم فني بخصوص تطبيق خطوط النقل." target="_blank" class="control-btn btn-support" title="اتصل بالدعم">
+            <i class="fab fa-whatsapp"></i>
+        </a>
         <button class="control-btn" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         <button class="control-btn" onclick="locateStudent()"><i class="fas fa-crosshairs"></i></button>
     </div>
@@ -199,13 +212,16 @@
 
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.control.zoom({ position: 'topright' }).addTo(map);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
+        // 1. تحديد الأيقونات (باص كبير وسيارة خاصة)
         const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+        const carIcon = L.divIcon({ className: 'custom-car-icon', html: '<div style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-car" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
         const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
         let userMarker = null, studentLocation = null, allDrivers = [], liveDrivers = [];
         const busMarkers = {};
+        const busPaths = {}; // لتخزين خطوط السير
         
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
@@ -234,7 +250,7 @@
 
         function locateStudent() {
             if (!navigator.geolocation) return showToast("جهازك لا يدعم تحديد الموقع", "error");
-            const btn = document.querySelectorAll('.control-btn')[1].querySelector('i');
+            const btn = document.querySelectorAll('.control-btn')[2].querySelector('i');
             btn.className = 'fas fa-circle-notch fa-spin';
 
             navigator.geolocation.getCurrentPosition(
@@ -315,14 +331,19 @@
                 
                 const distanceText = route.distance !== null ? `<div class="distance-badge"><i class="fas fa-location-arrow"></i> يبعد ${route.distance} كم</div>` : `<div class="distance-badge" style="background:transparent; color:var(--text-muted);">غير متصل</div>`;
                 const isLive = route.liveData ? 'border-right: 4px solid var(--success);' : '';
+                
+                // اختيار الأيقونة والنوع
+                const isBus = route.vehicle_type === 'bus';
+                const typeIcon = isBus ? 'fa-bus' : 'fa-car';
+                const typeClass = isBus ? 'bus' : 'car';
 
                 return `
                 <div class="driver-card" id="card_${cleanPhone}" style="${isLive}" onclick="focusOnDriver('${cleanPhone}', ${route.liveData?.lat}, ${route.liveData?.lng})">
                     <div class="driver-header">
-                        <div class="driver-avatar"><i class="fas fa-user-tie"></i></div>
+                        <div class="driver-avatar ${typeClass}"><i class="fas ${typeIcon}"></i></div>
                         <div class="driver-info">
                             <h3>${route.driver_name}</h3>
-                            <p><i class="fas fa-car" style="color:var(--primary-light);"></i> ${route.car || 'سيارة'}</p>
+                            <p><i class="fas fa-car" style="color:var(--primary-light);"></i> ${route.car || (isBus ? 'باص' : 'سيارة')}</p>
                             <p><i class="fas fa-map-marker-alt" style="color:var(--danger);"></i> ${route.area}</p>
                             <p><i class="fas fa-chair" style="color:var(--warning);"></i> ${route.available_seats} مقاعد | <i class="fas fa-money-bill-wave" style="color:var(--success);"></i> ${route.price} د.ع</p>
                         </div>
@@ -351,7 +372,6 @@
             }
         }
 
-        // جلب السائقين وتحديث الخريطة
         async function fetchLiveBuses() {
             const { data } = await sb.from('live_buses').select('*');
             liveDrivers = data || [];
@@ -365,18 +385,27 @@
                 counter.style.display = 'none';
             }
 
-            // مسح كل الماركرات القديمة
+            // مسح الماركرات والخطوط القديمة
             for (let phone in busMarkers) {
                 map.removeLayer(busMarkers[phone]);
                 delete busMarkers[phone];
             }
+            for (let phone in busPaths) {
+                map.removeLayer(busPaths[phone]);
+                delete busPaths[phone];
+            }
 
-            // إعادة رسم الماركرات
+            // إعادة الرسم
             liveDrivers.forEach(bus => {
                 if (!bus?.lat || !bus?.lng) return;
                 const lat = parseFloat(bus.lat);
                 const lng = parseFloat(bus.lng);
-                busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: busIcon })
+                
+                // 1. اختيار الأيقونة
+                const iconToUse = bus.vehicle_type === 'bus' ? busIcon : carIcon;
+
+                // 2. رسم الماركر
+                busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: iconToUse })
                     .addTo(map)
                     .bindPopup(`<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}`)
                     .on('click', () => {
@@ -387,25 +416,29 @@
                             if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 300);
                     });
+
+                // 3. رسم المسار (Line)
+                if (bus.path && bus.path.length > 1) {
+                    busPaths[bus.driver_phone] = L.polyline(bus.path, {
+                        color: bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6', 
+                        weight: 4,
+                        opacity: 0.7,
+                        dashArray: '8, 8', 
+                        lineJoin: 'round'
+                    }).addTo(map);
+                }
             });
 
             if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
         }
 
         function loadLiveBuses() {
-            fetchLiveBuses(); // جلب أولي
+            fetchLiveBuses();
 
             sb.channel('live_buses_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
-                    console.log("🔔 تحديث لحظي وصل:", payload.eventType);
-                    fetchLiveBuses(); // تحديث شامل عند أي إضافة، تعديل، أو حذف
-                })
-                .subscribe((status) => {
-                    console.log("حالة الاتصال اللحظي:", status);
-                    if(status === 'CHANNEL_ERROR') {
-                        showToast("انقطع الاتصال اللحظي، يرجى تحديث الصفحة", "error");
-                    }
-                });
+                    fetchLiveBuses();
+                }).subscribe();
         }
 
         document.addEventListener('DOMContentLoaded', () => {

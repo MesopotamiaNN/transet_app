@@ -27,21 +27,25 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
     body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
     
+    /* شاشة التسجيل */
     #setupScreen { position: absolute; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; transition: 0.3s; }
     .setup-card { background: var(--white); padding: 35px 25px; border-radius: 30px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); position: relative; }
     .setup-card h2 { color: var(--text); text-align: center; margin-bottom: 25px; font-size: 1.5rem; font-weight: 900; }
     .field { margin-bottom: 15px; }
     .field label { display: block; font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; color: var(--text); }
-    .field input { width: 100%; padding: 15px 16px; border: 2px solid var(--border-light); border-radius: 16px; font-size: 0.95rem; font-weight: 700; outline: none; font-family: 'Cairo'; background: var(--input-bg); color: var(--text); transition: 0.3s; }
-    .field input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+    .field input, .field select { width: 100%; padding: 15px 16px; border: 2px solid var(--border-light); border-radius: 16px; font-size: 0.95rem; font-weight: 700; outline: none; font-family: 'Cairo'; background: var(--input-bg); color: var(--text); transition: 0.3s; appearance: none; }
+    .field input:focus, .field select:focus { border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
     .btn-main { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 900; font-family: 'Cairo'; cursor: pointer; margin-top: 10px; box-shadow: 0 6px 20px rgba(30,58,138,0.3); transition: 0.2s; }
     .btn-main:active { transform: scale(0.95); }
 
     .setup-theme-btn { position: absolute; top: 20px; left: 20px; background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+    /* الخريطة */
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
     body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+    .leaflet-control-attribution { display: none !important; }
 
+    /* شريط التنقل السفلي */
     .bottom-nav { 
         position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
         width: 92%; max-width: 400px; height: 75px; background: var(--nav-bg); 
@@ -76,6 +80,7 @@
     .live-text { font-size: 0.75rem; font-weight: 900; color: var(--text-muted); transition: 0.3s; }
     .live-text.active { color: var(--success); }
 
+    /* القائمة السفلية */
     .bottom-sheet { 
         position: absolute; bottom: -100%; left: 0; width: 100%; height: 45%; 
         background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; 
@@ -116,7 +121,16 @@
             <div class="field"><label>الاسم الكامل</label><input id="fName" placeholder="مثال: أحمد علي"></div>
             <div class="field"><label>رقم الهاتف</label><input id="fPhone" type="tel" placeholder="07XXXXXXXXX"></div>
             <div class="field"><label>المناطق التي تمر بها</label><input id="fArea" placeholder="مثال: اليرموك، الحرية، زيونة"></div>
-            <div class="field"><label>نوع السيارة</label><input id="fCar" placeholder="مثال: كيا باص"></div>
+            
+            <div class="field">
+                <label>نوع المركبة</label>
+                <select id="fVehicleType">
+                    <option value="bus">🚌 باص كبير</option>
+                    <option value="car">🚗 سيارة خاصة</option>
+                </select>
+            </div>
+            
+            <div class="field"><label>تفاصيل السيارة (اختياري)</label><input id="fCar" placeholder="مثال: كيا باص، تويوتا..."></div>
             <div style="display:flex; gap:10px;">
                 <div class="field" style="flex:1;"><label>المقاعد الكلية</label><input id="fSeats" type="number" value="4"></div>
                 <div class="field" style="flex:1;"><label>السعر (د.ع)</label><input id="fPrice" type="number" value="50000"></div>
@@ -129,12 +143,8 @@
     <div id="map"></div>
     
     <div class="bottom-nav" id="driverNav">
-        <div class="nav-item" onclick="closeSheet()">
-            <i class="fas fa-map-marked-alt"></i> الخريطة
-        </div>
-        <div class="nav-item" onclick="openSeatsSheet()">
-            <i class="fas fa-chair"></i> المقاعد
-        </div>
+        <div class="nav-item" onclick="closeSheet()"><i class="fas fa-map-marked-alt"></i> الخريطة</div>
+        <div class="nav-item" onclick="openSeatsSheet()"><i class="fas fa-chair"></i> المقاعد</div>
         
         <div class="nav-item live-toggle-item" onclick="toggleLive()">
             <div class="toggle-switch" id="liveToggleSwitch">
@@ -143,9 +153,7 @@
             <span class="live-text" id="liveToggleText">مغلق</span>
         </div>
 
-        <div class="nav-item" onclick="stopTrip()" style="color: var(--danger);">
-            <i class="fas fa-sign-out-alt"></i> إنهاء
-        </div>
+        <div class="nav-item" onclick="stopTrip()" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> إنهاء</div>
     </div>
 
     <div class="map-controls" id="driverMapControls">
@@ -190,12 +198,13 @@
 
         const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.control.zoom({ position: 'topright' }).addTo(map);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
         const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div style="background:#1e3a8a; color:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:18px;"></i></div>', iconSize: [40, 40], iconAnchor: [20, 20] });
-
+        
         let driver = null, watchId = null, myMarker = null, isLive = false;
         let currentAvailableSeats = 4;
+        let currentPath = []; 
 
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
@@ -214,6 +223,7 @@
             const name = document.getElementById('fName').value.trim();
             const phone = document.getElementById('fPhone').value.trim();
             const area = document.getElementById('fArea').value.trim();
+            const vehicleType = document.getElementById('fVehicleType').value;
             const car = document.getElementById('fCar').value.trim();
             const seats = parseInt(document.getElementById('fSeats').value) || 4;
             const price = parseInt(document.getElementById('fPrice').value) || 0;
@@ -221,14 +231,14 @@
 
             if (!name || !phone || !area) return showToast('الاسم والهاتف والمناطق مطلوبة', 'error');
 
-            driver = { name, phone, area, car, seats, price, time };
+            driver = { name, phone, area, vehicleType, car, seats, price, time };
             localStorage.setItem('driver', JSON.stringify(driver));
             currentAvailableSeats = seats;
 
             try {
                 const { error } = await sb.from('routes').upsert({ 
                     driver_phone: phone, driver_name: name, car, area, 
-                    total_seats: seats, available_seats: seats, price, time, active: true 
+                    vehicle_type: vehicleType, total_seats: seats, available_seats: seats, price, time, active: true 
                 }, { onConflict: 'driver_phone' });
                 if (error) throw error;
             } catch (err) { showToast('فشل الحفظ', 'error'); }
@@ -254,10 +264,8 @@
         async function updateSeats(change) {
             let newSeats = currentAvailableSeats + change;
             if (newSeats < 0 || newSeats > driver.seats) return;
-
             currentAvailableSeats = newSeats;
             document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
-
             await sb.from('routes').update({ available_seats: currentAvailableSeats }).eq('driver_phone', driver.phone);
         }
 
@@ -267,6 +275,7 @@
 
             if (!isLive) {
                 if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
+                currentPath = []; 
                 watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
                 isLive = true;
                 
@@ -275,21 +284,17 @@
                 toggleText.textContent = 'مباشر';
                 showToast('أنت الآن مباشر على الخريطة', 'success');
             } else {
-                isLive = false; // إيقاف الإرسال أولاً
+                isLive = false;
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
                 
                 try {
                     await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
-                    
                     toggleSwitch.classList.remove('active');
                     toggleText.classList.remove('active');
                     toggleText.textContent = 'مغلق';
-                    
                     if(myMarker) { map.removeLayer(myMarker); myMarker = null; }
-                    
                     showToast('تم إخفاء سيارتك من الخريطة', 'error');
                 } catch (err) {
-                    console.error("خطأ أثناء الحذف:", err);
                     showToast('حدث خطأ في إيقاف البث', 'error');
                     isLive = true; 
                 }
@@ -315,17 +320,18 @@
             if (now - lastSent < 3000) return;
             lastSent = now;
 
+            currentPath.push([lat, lng]);
+            if (currentPath.length > 60) currentPath.shift();
+
             try {
                 await sb.from('live_buses').upsert({ 
-                    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, lat, lng, updated_at: new Date().toISOString() 
+                    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, 
+                    vehicle_type: driver.vehicleType, lat, lng, path: currentPath, updated_at: new Date().toISOString() 
                 }, { onConflict: 'driver_phone' });
             } catch (err) { console.error(err); }
         }
 
-        function onError(err) { 
-            showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); 
-            if(isLive) toggleLive(); 
-        }
+        function onError(err) { showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); if(isLive) toggleLive(); }
 
         map.on('click', closeSheet);
 
