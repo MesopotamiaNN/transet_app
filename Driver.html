@@ -15,13 +15,14 @@
         --primary: #1e3a8a; --primary-light: #3b82f6; --accent: #8b5cf6; --success: #10b981; --danger: #ef4444; 
         --bg: #f0f4ff; --white: #ffffff; --card-bg: #ffffff; --text: #1f2937; --text-muted: #64748b; 
         --border-light: #e2e8f0; --input-bg: #f8fafc; --nav-bg: rgba(255, 255, 255, 0.85);
-        --shadow-lg: 0 20px 40px rgba(0,0,0,0.15); --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        --shadow-md: 0 10px 25px rgba(0,0,0,0.1); --shadow-lg: 0 20px 40px rgba(0,0,0,0.15); 
+        --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     }
     body.dark-mode { 
         --primary: #3b82f6; --primary-light: #60a5fa; 
         --bg: #0f172a; --white: #1e293b; --card-bg: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; 
         --border-light: #334155; --input-bg: #0f172a; --nav-bg: rgba(30, 41, 59, 0.85);
-        --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+        --shadow-md: 0 10px 25px rgba(0,0,0,0.4); --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -44,15 +45,38 @@
     #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
     body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     .leaflet-control-attribution { display: none !important; }
+    .leaflet-bottom.leaflet-left { bottom: 105px !important; }
+    .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-md) !important; border-radius: 12px !important; overflow: hidden; }
+    .leaflet-control-zoom a { background: var(--white) !important; color: var(--text) !important; border-bottom: 1px solid var(--border-light) !important; }
 
-    /* شريط التنقل السفلي */
+    /* شريط الحالة العلوي (مطابق لواجهة الطالب) */
+    .top-bar {
+        position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+        z-index: 1000; display: flex; justify-content: center; width: 90%; max-width: 400px; pointer-events: none;
+    }
+    .status-badge {
+        background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        padding: 10px 25px; border-radius: 50px; box-shadow: var(--shadow-md);
+        font-weight: 800; color: var(--text-muted); display: flex; align-items: center; gap: 10px;
+        font-size: 0.95rem; white-space: nowrap; border: 1px solid var(--border-light);
+        pointer-events: auto; transition: 0.3s;
+    }
+    .status-badge.live { color: var(--success); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1); }
+    .status-badge i { font-size: 1.1rem; }
+
+    /* أزرار التحكم العائمة */
+    .map-controls { position: absolute; bottom: 105px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
+    .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
+    .control-btn:active { transform: scale(0.85); }
+
+    /* شريط التنقل السفلي (مطابق لواجهة الطالب) */
     .bottom-nav { 
         position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-        width: 92%; max-width: 400px; height: 75px; background: var(--nav-bg); 
+        width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); 
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 2000; 
         border-radius: 24px; box-shadow: var(--shadow-lg); display: none; 
         justify-content: space-between; align-items: center; border: 1px solid var(--border-light); 
-        padding: 0 15px; transition: 0.3s; 
+        padding: 0 10px; transition: 0.3s; 
     }
     
     .nav-item { 
@@ -80,14 +104,14 @@
     .live-text { font-size: 0.75rem; font-weight: 900; color: var(--text-muted); transition: 0.3s; }
     .live-text.active { color: var(--success); }
 
-    /* القائمة السفلية */
+    /* القائمة السفلية (نافذة المقاعد) */
     .bottom-sheet { 
         position: absolute; bottom: -100%; left: 0; width: 100%; height: 45%; 
         background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; 
         transition: bottom 0.4s var(--spring); display: flex; flex-direction: column; 
         box-shadow: 0 -10px 40px rgba(0,0,0,0.2); 
     }
-    .bottom-sheet.open { bottom: 105px; } 
+    .bottom-sheet.open { bottom: 0; } 
     
     .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
     .sheet-header { padding: 10px 25px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
@@ -102,9 +126,7 @@
     .seat-btn:active { transform: scale(0.9); }
     .seat-number { font-size: 3.5rem; font-weight: 900; color: var(--primary); line-height: 1; }
 
-    .map-controls { position: absolute; bottom: 120px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
-    .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
-    
+    /* الإشعارات */
     #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 350px; pointer-events: none; }
     .toast { background: var(--white); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow-lg); font-weight: 800; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 12px; transform: translateY(-30px); opacity: 0; transition: 0.4s var(--spring); border-right: 5px solid var(--primary); }
     .toast.show { transform: translateY(0); opacity: 1; }
@@ -142,6 +164,14 @@
 
     <div id="map"></div>
     
+    <!-- شريط الحالة العلوي -->
+    <div class="top-bar" id="driverTopBar" style="display: none;">
+        <div class="status-badge" id="statusBadge">
+            <i class="fas fa-power-off" id="statusIcon"></i> <span id="statusText">غير متصل</span>
+        </div>
+    </div>
+
+    <!-- شريط التنقل السفلي -->
     <div class="bottom-nav" id="driverNav">
         <div class="nav-item" onclick="closeSheet()"><i class="fas fa-map-marked-alt"></i> الخريطة</div>
         <div class="nav-item" onclick="openSeatsSheet()"><i class="fas fa-chair"></i> المقاعد</div>
@@ -156,10 +186,12 @@
         <div class="nav-item" onclick="stopTrip()" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> إنهاء</div>
     </div>
 
+    <!-- أزرار التحكم بالخريطة (الوضع الليلي) -->
     <div class="map-controls" id="driverMapControls">
         <button class="control-btn" id="themeToggleDriver" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </div>
 
+    <!-- نافذة إدارة المقاعد -->
     <div class="bottom-sheet" id="seatsSheet">
         <div class="drag-handle"></div>
         <div class="sheet-header">
@@ -248,6 +280,7 @@
 
         async function startDashboard() {
             document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('driverTopBar').style.display = 'flex';
             document.getElementById('driverNav').style.display = 'flex';
             document.getElementById('driverMapControls').style.display = 'flex';
             document.getElementById('displayTotalSeats').textContent = driver.seats;
@@ -257,9 +290,15 @@
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
         }
 
-        function openSeatsSheet() { document.getElementById('seatsSheet').classList.add('open'); }
-        function closeSeatsSheet() { document.getElementById('seatsSheet').classList.remove('open'); }
-        function closeSheet() { closeSeatsSheet(); }
+        function openSeatsSheet() { 
+            document.getElementById('seatsSheet').classList.add('open'); 
+        }
+        function closeSeatsSheet() { 
+            document.getElementById('seatsSheet').classList.remove('open'); 
+        }
+        function closeSheet() { 
+            closeSeatsSheet(); 
+        }
 
         async function updateSeats(change) {
             let newSeats = currentAvailableSeats + change;
@@ -272,6 +311,9 @@
         async function toggleLive() {
             const toggleSwitch = document.getElementById('liveToggleSwitch');
             const toggleText = document.getElementById('liveToggleText');
+            const statusBadge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+            const statusIcon = document.getElementById('statusIcon');
 
             if (!isLive) {
                 if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
@@ -279,9 +321,16 @@
                 watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
                 isLive = true;
                 
+                // تحديث المفتاح
                 toggleSwitch.classList.add('active');
                 toggleText.classList.add('active');
                 toggleText.textContent = 'مباشر';
+                
+                // تحديث الشريط العلوي
+                statusBadge.classList.add('live');
+                statusText.textContent = 'أنت متصل (مباشر)';
+                statusIcon.className = 'fas fa-satellite-dish';
+                
                 showToast('أنت الآن مباشر على الخريطة', 'success');
             } else {
                 isLive = false;
@@ -289,9 +338,17 @@
                 
                 try {
                     await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
+                    
+                    // تحديث المفتاح
                     toggleSwitch.classList.remove('active');
                     toggleText.classList.remove('active');
                     toggleText.textContent = 'مغلق';
+                    
+                    // تحديث الشريط العلوي
+                    statusBadge.classList.remove('live');
+                    statusText.textContent = 'غير متصل';
+                    statusIcon.className = 'fas fa-power-off';
+                    
                     if(myMarker) { map.removeLayer(myMarker); myMarker = null; }
                     showToast('تم إخفاء سيارتك من الخريطة', 'error');
                 } catch (err) {
