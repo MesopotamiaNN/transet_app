@@ -356,6 +356,10 @@
 
         function updateSingleBus(bus) {
             if (!bus?.lat || !bus?.lng) return;
+            
+            // 🚨 تحديث وقت آخر استلام محلياً
+            bus.last_seen = Date.now(); 
+
             const lat = parseFloat(bus.lat);
             const lng = parseFloat(bus.lng);
             
@@ -423,10 +427,11 @@
         async function fetchLiveBuses() {
             const { data } = await sb.from('live_buses').select('*');
             
-            const now = Date.now();
+            // تحديث القائمة وإضافة وقت الاستلام المحلي
             liveDrivers = (data || []).map(bus => {
-                // نعين وقت استلام البيانات محلياً لتجنب مشاكل توقيت السيرفر
-                bus.client_updated_at = now; 
+                // إذا كان الباص موجوداً مسبقاً، نحافظ على وقت آخر استلام له
+                const existing = liveDrivers.find(d => d.driver_phone === bus.driver_phone);
+                bus.last_seen = existing ? existing.last_seen : Date.now();
                 return bus;
             });
 
@@ -441,7 +446,7 @@
 
             const currentPhones = liveDrivers.map(b => b.driver_phone);
 
-            // حذف الباصات التي أغلقت التطبيق (لم تعد موجودة في قاعدة البيانات)
+            // إزالة الباصات التي اختفت من قاعدة البيانات
             for (let phone in busMarkers) {
                 if (!currentPhones.includes(phone)) {
                     map.removeLayer(busMarkers[phone]);
@@ -463,19 +468,28 @@
 
             sb.channel('live_buses_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
+                    
                     if (payload.eventType === 'DELETE') {
-                        const phone = payload.old.driver_phone;
-                        if (busMarkers[phone]) { map.removeLayer(busMarkers[phone]); delete busMarkers[phone]; }
-                        if (busPaths[phone]) { map.removeLayer(busPaths[phone]); delete busPaths[phone]; }
-                        liveDrivers = liveDrivers.filter(d => d.driver_phone !== phone);
+                        // 🚨 الحل الجذري: البحث عن الباص بواسطة الـ id وحذفه فوراً
+                        const deletedId = payload.old.id;
+                        const busToDelete = liveDrivers.find(b => b.id === deletedId);
+                        
+                        if (busToDelete) {
+                            const phone = busToDelete.driver_phone;
+                            if (busMarkers[phone]) { map.removeLayer(busMarkers[phone]); delete busMarkers[phone]; }
+                            if (busPaths[phone]) { map.removeLayer(busPaths[phone]); delete busPaths[phone]; }
+                            liveDrivers = liveDrivers.filter(d => d.id !== deletedId);
+                        } else {
+                            // إذا لم نجده بالـ ID، نقوم بتحديث شامل كخطة بديلة
+                            fetchLiveBuses();
+                        }
                     } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                         const bus = payload.new;
                         if (!bus) return;
                         
-                        // تعيين التوقيت المحلي عند كل تحديث ناجح
-                        bus.client_updated_at = Date.now(); 
-                        
+                        bus.last_seen = Date.now(); // تحديث وقت الاستلام
                         updateSingleBus(bus);
+                        
                         const idx = liveDrivers.findIndex(d => d.driver_phone === bus.driver_phone);
                         if(idx > -1) liveDrivers[idx] = bus;
                         else liveDrivers.push(bus);
@@ -489,14 +503,15 @@
                     if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
                 }).subscribe();
 
-            // 🚨 الفحص الدوري (كل 5 ثوانٍ) لإزالة أي باص لم يرسل تحديث منذ 45 ثانية
+            // 🚨 الفحص المحلي: كل 5 ثوانٍ نتحقق من وقت "آخر استلام". إذا مر 45 ثانية بدون تحديث، نمسحه.
             setInterval(() => {
                 const now = Date.now();
                 liveDrivers.forEach(bus => {
-                    if (bus.client_updated_at && (now - bus.client_updated_at) > 45000) {
+                    if (bus.last_seen && (now - bus.last_seen) > 45000) {
                         if (busMarkers[bus.driver_phone]) { map.removeLayer(busMarkers[bus.driver_phone]); delete busMarkers[bus.driver_phone]; }
                         if (busPaths[bus.driver_phone]) { map.removeLayer(busPaths[bus.driver_phone]); delete busPaths[bus.driver_phone]; }
                         liveDrivers = liveDrivers.filter(d => d.driver_phone !== bus.driver_phone);
+                        
                         if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
                         
                         const counter = document.getElementById('liveCounter');

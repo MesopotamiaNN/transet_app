@@ -192,6 +192,8 @@
         let driver = null, watchId = null, myMarker = null, isLive = false;
         let currentAvailableSeats = 4;
         let currentPath = []; 
+        let lastKnownLat = null, lastKnownLng = null; // لحفظ آخر موقع
+        let heartbeatInterval = null; // لنبض الحياة
 
         const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
@@ -241,7 +243,7 @@
             document.getElementById('displayTotalSeats').textContent = driver.seats;
             document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
             
-            // إعادة تعيين الحالة لتبدأ مغلقة
+            // إعادة تعيين الحالة لتبدأ مغلقة دائماً
             isLive = false;
             document.getElementById('liveToggleSwitch').classList.remove('active');
             document.getElementById('liveToggleText').classList.remove('active');
@@ -253,7 +255,7 @@
 
             setTimeout(() => map.invalidateSize(), 200);
             
-            // مسح أي أثر قديم في قاعدة البيانات عند فتح التطبيق
+            // 🚨 السر هنا: مسح أي أثر قديم في قاعدة البيانات فور فتح التطبيق
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
         }
 
@@ -270,6 +272,9 @@
         }
 
         async function sendLocation(lat, lng) {
+            lastKnownLat = lat; // حفظ الموقع الأخير
+            lastKnownLng = lng;
+
             if (!myMarker) { 
                 myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map); 
                 map.setView([lat, lng], 16); 
@@ -301,6 +306,7 @@
                 currentPath = []; 
                 isLive = true;
                 
+                // جلب الموقع فوراً
                 navigator.geolocation.getCurrentPosition(
                     (pos) => { 
                         sendLocation(pos.coords.latitude, pos.coords.longitude);
@@ -309,6 +315,13 @@
                     (err) => { showToast('تعذر جلب الموقع، تأكد من GPS', 'error'); isLive = false; },
                     { enableHighAccuracy: true }
                 );
+
+                // 🚨 نبض الحياة: تحديث قاعدة البيانات كل 10 ثوانٍ حتى لو كان الباص واقفاً
+                heartbeatInterval = setInterval(() => {
+                    if (isLive && lastKnownLat && lastKnownLng) {
+                        sb.from('live_buses').update({ updated_at: new Date().toISOString() }).eq('driver_phone', driver.phone).then();
+                    }
+                }, 10000);
                 
                 toggleSwitch.classList.add('active');
                 toggleText.classList.add('active');
@@ -321,6 +334,7 @@
             } else {
                 isLive = false;
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                if (heartbeatInterval !== null) { clearInterval(heartbeatInterval); heartbeatInterval = null; } // إيقاف النبض
                 
                 try {
                     await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
@@ -344,6 +358,7 @@
 
         async function stopTrip() {
             if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            if (heartbeatInterval !== null) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
             await sb.from('routes').update({ active: false }).eq('driver_phone', driver.phone);
             localStorage.removeItem('driver');
@@ -361,7 +376,7 @@
 
         function onError(err) { showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); if(isLive) toggleLive(); }
 
-        // مسح الموقع عند إغلاق المتصفح بشكل مفاجئ
+        // محاولة مسح الموقع عند إغلاق التطبيق المفاجئ (حماية إضافية)
         window.addEventListener('beforeunload', function (e) {
             if (isLive && driver) {
                 sb.from('live_buses').delete().eq('driver_phone', driver.phone).then();
