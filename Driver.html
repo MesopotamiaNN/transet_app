@@ -209,9 +209,9 @@
     let lastSentAt = 0;
     let setupCompleted = false;
 
-    const HEARTBEAT_MS = 2000;       // نبض كل ثانيتين
-    const POSITION_THROTTLE_MS = 1000; // إرسال فوري عند الحركة (1 ثانية كحد أدنى)
-    const GPS_MAX_STRIKES = 3;        // قطع البث بعد 3 أخطاء GPS متتالية
+    const HEARTBEAT_MS = 2000;
+    const POSITION_THROTTLE_MS = 1000;
+    const GPS_MAX_STRIKES = 3;
 
     /* ====== Supabase ====== */
     const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
@@ -401,6 +401,8 @@
 
         if (!myMarker) {
             myMarker = L.marker([lat, lng], { icon: getVehicleIcon() }).addTo(map);
+            // ← زوم تلقائي أول مرة فقط
+            map.flyTo([lat, lng], 16, { animate: true, duration: 1.2 });
         } else {
             myMarker.setLatLng([lat, lng]);
         }
@@ -488,7 +490,7 @@
     }
 
     async function toggleLive() {
-        if (isStarting) return; // لا تقاطع بدء جارٍ
+        if (isStarting) return;
         if (isLive) return stopLive();
         return startLive();
     }

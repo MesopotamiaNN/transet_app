@@ -30,7 +30,7 @@
         }
 
         body.dark-mode {
-            --primary: #3b82f6; --primary-light: #60a5fa; 
+            --primary: #3b82f6; --primary-light: #60a5fa;
             --bg: #0f172a; --white: #1e293b; --card-bg: #1e293b;
             --text: #f8fafc; --text-muted: #94a3b8;
             --shadow-sm: 0 4px 6px rgba(0,0,0,0.3);
@@ -42,7 +42,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; overflow: hidden; background: var(--bg); transition: background 0.3s ease; }
-        
+
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #e5e7eb; transition: filter 0.3s ease; }
         body.dark-mode .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
         .leaflet-control-attribution { display: none !important; }
@@ -51,8 +51,8 @@
         .leaflet-control-zoom a { background: var(--white) !important; color: var(--text) !important; border-bottom: 1px solid var(--border-light) !important; }
 
         .top-bar { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-        .welcome-bar { background: var(--nav-bg); backdrop-filter: blur(20px); padding: 10px 20px; border-radius: 50px; box-shadow: var(--shadow-md); font-weight: 800; color: var(--text); display: none; align-items: center; gap: 8px; font-size: 0.9rem; white-space: nowrap; border: 1px solid var(--border-light); flex: 1; pointer-events: auto; }
-        .live-counter { background: var(--success); color: white; padding: 10px 15px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 6px; pointer-events: auto; }
+        .welcome-bar { background: var(--nav-bg); backdrop-filter: blur(20px); padding: 10px 20px; border-radius: 50px; box-shadow: var(--shadow-md); font-weight: 800; color: var(--text); display: none; align-items: center; gap: 8px; font-size: 0.9rem; white-space: nowrap; border: 1px solid var(--border-light); flex: 1; pointer-events: auto; overflow: hidden; text-overflow: ellipsis; }
+        .live-counter { background: var(--success); color: white; padding: 10px 15px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 6px; pointer-events: auto; white-space: nowrap; }
 
         .map-controls { position: absolute; bottom: 105px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
         .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); text-decoration: none; }
@@ -68,7 +68,7 @@
 
         .bottom-sheet { position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%; background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); transition: bottom 0.4s var(--spring); display: flex; flex-direction: column; }
         .bottom-sheet.open { bottom: 0; }
-        
+
         .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
         .sheet-header { padding: 10px 25px 15px; display: flex; justify-content: space-between; align-items: center; }
         .sheet-header h2 { font-size: 1.2rem; color: var(--text); font-weight: 900; }
@@ -85,17 +85,20 @@
         .driver-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-sm); cursor: pointer; transition: 0.3s; }
         .driver-card:active { transform: scale(0.98); }
         .driver-card.highlight { border-color: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-light); }
-        
+
         .driver-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .driver-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-left: 15px; }
+        .driver-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-left: 15px; flex-shrink: 0; }
         .driver-avatar.bus { background: rgba(30, 58, 138, 0.1); color: #1e3a8a; }
         .driver-avatar.car { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-        
-        .driver-info { flex: 1; }
+
+        .driver-info { flex: 1; min-width: 0; }
         .driver-info h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 4px; font-weight: 900; }
         .driver-info p { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 2px; font-weight: 600; }
-        
-        .distance-badge { background: rgba(139, 92, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: left; }
+
+        .distance-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: left; }
+        .distance-badge.live-dist { background: rgba(139, 92, 246, 0.1); color: var(--accent); }
+        .distance-badge.live-no-loc { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .distance-badge.offline { background: rgba(100, 116, 139, 0.1); color: var(--text-muted); }
         .distance-eta { font-size: 0.65rem; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: 6px; width: fit-content; }
 
         .contact-actions { display: flex; gap: 10px; margin-top: 5px; }
@@ -126,7 +129,8 @@
 
     <div class="top-bar">
         <div class="welcome-bar" id="welcomeBar">
-            <i class="fas fa-user-graduate" style="color: var(--accent);"></i> أهلاً، <span id="stdNameDisplay"></span>
+            <i class="fas fa-user-graduate" style="color: var(--accent); flex-shrink:0;"></i>
+            <span style="overflow:hidden; text-overflow:ellipsis;">أهلاً، <span id="stdNameDisplay">طالب</span></span>
         </div>
         <div class="live-counter" id="liveCounter" style="display: none;">
             <i class="fas fa-bus"></i> <span id="busCount">0</span> مباشر
@@ -135,7 +139,7 @@
 
     <div class="map-controls">
         <button class="control-btn" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
-        <button class="control-btn" onclick="locateStudent()"><i class="fas fa-crosshairs"></i></button>
+        <button class="control-btn" onclick="locateStudent(false)"><i class="fas fa-crosshairs"></i></button>
     </div>
 
     <div class="bottom-sheet" id="mainSheet">
@@ -144,12 +148,12 @@
             <h2 id="sheetTitle">السائقون المتاحون</h2>
             <button class="close-btn" onclick="closeSheet()"><i class="fas fa-times"></i></button>
         </div>
-        
+
         <div class="search-box" id="searchBoxContainer">
             <i class="fas fa-search"></i>
             <input type="text" id="searchInput" placeholder="ابحث عن منطقة أو اسم سائق..." oninput="renderDrivers()">
         </div>
-        
+
         <div class="list-container" id="listContainer"></div>
     </div>
 
@@ -162,372 +166,530 @@
 
     <div id="toastContainer"></div>
 
-    <script>
-        const themeToggleBtn = document.getElementById('themeToggle');
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
+<script>
+    /* ============ الثيم ============ */
+    const themeToggleBtn = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
             themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
         }
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            if (document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                localStorage.setItem('theme', 'light');
-                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
-            }
-        }
+    }
 
-        const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    /* ============ الخريطة ============ */
+    const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div class="bus-icon-bg" style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
-        const carIcon = L.divIcon({ className: 'custom-car-icon', html: '<div class="bus-icon-bg" style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-car" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
-        const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
+    const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div class="bus-icon-bg" style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+    const carIcon = L.divIcon({ className: 'custom-car-icon', html: '<div class="bus-icon-bg" style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-car" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+    const pulseIconBus = L.divIcon({ className: 'custom-bus-icon pulse-close', html: '<div class="bus-icon-bg" style="background:#10b981; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+    const pulseIconCar = L.divIcon({ className: 'custom-car-icon pulse-close', html: '<div class="bus-icon-bg" style="background:#10b981; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fas fa-car" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+    const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
-        let userMarker = null, studentLocation = null, allDrivers = [], liveDrivers = [];
-        const busMarkers = {};
-        const busPaths = {};
-        const notifiedDrivers = new Set();
+    /* ============ الحالة ============ */
+    let userMarker = null;
+    let studentLocation = null;
+    let locationDenied = false;
+    let allDrivers = [];
+    let liveDrivers = [];
+    let routesLastFetch = 0;
 
-        const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const busMarkers = {};
+    const busPaths = {};
+    const lastIsClose = {};
+    const notifiedDrivers = new Set();
 
-        let currentStudent = { reg_id: 'TEST-123', name: 'طالب تجريبي' }; 
+    const LIVE_TIMEOUT_MS = 20000;   // اختفاء السائق بعد 20 ثانية بدون نبض
+    const ROUTES_CACHE_MS = 60000;   // كاش قائمة السائقين 60 ثانية
+    const AVG_SPEED_KMH = 25;        // متوسط سرعة مدينة واقعي
 
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            let icon = 'fa-check-circle';
-            if(type === 'error') icon = 'fa-exclamation-circle';
-            if(type === 'alert') icon = 'fa-bell';
-            toast.innerHTML = `<i class="fas ${icon}" style="font-size:1.2rem;"></i> <span>${message}</span>`;
-            document.getElementById('toastContainer').appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 5000);
-        }
+    /* ============ Supabase ============ */
+    const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function loadStudentData() {
+    /* ============ أدوات ============ */
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function sanitizePhone(p) {
+        return String(p || '').replace(/[^\d+]/g, '');
+    }
+
+    function toWaPhone(p) {
+        const clean = sanitizePhone(p).replace(/\+/g, '');
+        if (clean.startsWith('00964')) return '964' + clean.substring(5);
+        if (clean.startsWith('964')) return clean;
+        if (clean.startsWith('0')) return '964' + clean.substring(1);
+        return '964' + clean;
+    }
+
+    function isSheetOpen() {
+        return document.getElementById('mainSheet').classList.contains('open');
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        let icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+        if (type === 'alert') icon = 'fa-bell';
+        toast.innerHTML = `<i class="fas ${icon}" style="font-size:1.2rem;"></i> <span></span>`;
+        toast.querySelector('span').textContent = message;  // نص آمن
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 5000);
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return parseFloat((R * c).toFixed(1));
+    }
+
+    /* ============ بيانات الطالب ============ */
+    async function loadStudentData() {
+        try {
             const regId = new URLSearchParams(window.location.search).get('reg_id');
             if (regId && sb) {
-                const { data } = await sb.from('students').select('*').eq('reg_id', regId).single();
-                if (data) currentStudent = data;
+                const { data, error } = await sb.from('students').select('reg_id, name').eq('reg_id', regId).maybeSingle();
+                if (!error && data?.name) {
+                    document.getElementById('stdNameDisplay').textContent = data.name;
+                }
             }
-            document.getElementById('stdNameDisplay').textContent = currentStudent.name;
-            document.getElementById('welcomeBar').style.display = 'flex';
+        } catch (e) { console.warn('loadStudentData', e); }
+        document.getElementById('welcomeBar').style.display = 'flex';
+    }
+
+    /* ============ الموقع ============ */
+    function locateStudent(silent = false) {
+        if (!navigator.geolocation) {
+            if (!silent) showToast("جهازك لا يدعم تحديد الموقع", "error");
+            return;
         }
+        if (!silent) locationDenied = false; // محاولة يدوية → اسمح بإعادة الطلب
 
-        function locateStudent() {
-            if (!navigator.geolocation) return showToast("جهازك لا يدعم تحديد الموقع", "error");
-            const btn = document.querySelectorAll('.control-btn')[1].querySelector('i');
-            btn.className = 'fas fa-circle-notch fa-spin';
+        const btn = document.querySelectorAll('.control-btn')[1]?.querySelector('i');
+        const oldIcon = btn ? btn.className : '';
+        if (btn) btn.className = 'fas fa-circle-notch fa-spin';
 
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    studentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    if (userMarker) userMarker.setLatLng([studentLocation.lat, studentLocation.lng]);
-                    else userMarker = L.marker([studentLocation.lat, studentLocation.lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map).bindPopup("<b>موقعك الحالي</b>");
-                    map.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
-                    btn.className = 'fas fa-crosshairs';
-                    showToast("تم تحديد موقعك بنجاح");
-                    if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
-                    fetchLiveBuses();
-                },
-                (err) => { showToast("تعذر تحديد الموقع", "error"); btn.className = 'fas fa-crosshairs'; },
-                { enableHighAccuracy: true }
-            );
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                studentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                if (userMarker) userMarker.setLatLng([studentLocation.lat, studentLocation.lng]);
+                else userMarker = L.marker([studentLocation.lat, studentLocation.lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map).bindPopup("<b>موقعك الحالي</b>");
+                map.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
+                if (btn) btn.className = 'fas fa-crosshairs';
+                if (!silent) showToast("تم تحديد موقعك بنجاح");
+                if (isSheetOpen()) renderDrivers();
+            },
+            (err) => {
+                console.warn('geolocation error', err);
+                if (btn) btn.className = oldIcon || 'fas fa-crosshairs';
+                locationDenied = true;
+                if (!silent) showToast("تعذر تحديد الموقع، تأكد من إذن الموقع", "error");
+            },
+            { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 }
+        );
+    }
+
+    /* ============ التنقل ============ */
+    function setActiveNav(id) {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if (id !== 'test' && id !== 'support') document.getElementById(id)?.classList.add('active');
+    }
+
+    function closeSheet() {
+        document.getElementById('mainSheet').classList.remove('open');
+        document.getElementById('searchInput').value = '';
+        setActiveNav('nav-map');
+    }
+
+    /* ============ تحميل السائقين (routes) ============ */
+    async function loadRoutes(force = false) {
+        const now = Date.now();
+        if (!force && allDrivers.length > 0 && (now - routesLastFetch) < ROUTES_CACHE_MS) {
+            return true; // استخدم الكاش
         }
-
-        function setActiveNav(id) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(id !== 'test' && id !== 'support') document.getElementById(id).classList.add('active');
-        }
-
-        function closeSheet() { document.getElementById('mainSheet').classList.remove('open'); setActiveNav('nav-map'); }
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            if(!lat1 || !lon1 || !lat2 || !lon2) return null;
-            const R = 6371; 
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return (R * c).toFixed(1);
-        }
-
-        async function openDriversList() {
-            setActiveNav('nav-drivers');
-            document.getElementById('mainSheet').classList.add('open');
-            document.getElementById('searchBoxContainer').style.display = 'block';
-            document.getElementById('listContainer').innerHTML = Array(3).fill('<div class="skeleton-card"></div>').join('');
-            
-            const { data } = await sb.from('routes').select('*').eq('active', true);
+        try {
+            const { data, error } = await sb.from('routes').select('*').eq('active', true);
+            if (error) throw error;
             allDrivers = data || [];
+            routesLastFetch = now;
+            return true;
+        } catch (e) {
+            console.error('loadRoutes', e);
+            showToast('تعذر تحميل قائمة السائقين', 'error');
+            return false;
+        }
+    }
+
+    /* ============ فتح قائمة السائقين ============ */
+    async function openDriversList() {
+        setActiveNav('nav-drivers');
+        document.getElementById('mainSheet').classList.add('open');
+        document.getElementById('searchBoxContainer').style.display = 'block';
+
+        // skeleton فقط لو ما عندنا كاش
+        if (allDrivers.length === 0) {
+            document.getElementById('listContainer').innerHTML = Array(3).fill('<div class="skeleton-card"></div>').join('');
+        } else {
             renderDrivers();
         }
 
-        function renderDrivers() {
-            const searchQ = document.getElementById('searchInput').value.trim().toLowerCase();
-            
-            let displayDrivers = allDrivers.map(route => {
-                const live = liveDrivers.find(l => l.driver_phone === route.driver_phone);
-                let distance = null;
-                if (live && studentLocation) {
-                    distance = parseFloat(calculateDistance(studentLocation.lat, studentLocation.lng, live.lat, live.lng));
-                }
-                return { ...route, liveData: live, distance: distance };
-            });
-
-            if (searchQ) {
-                displayDrivers = displayDrivers.filter(d => 
-                    (d.driver_name && d.driver_name.toLowerCase().includes(searchQ)) || 
-                    (d.area && d.area.toLowerCase().includes(searchQ))
-                );
-            }
-
-            displayDrivers.sort((a, b) => {
-                if (a.distance === null) return 1;
-                if (b.distance === null) return -1;
-                return a.distance - b.distance;
-            });
-
-            const list = document.getElementById('listContainer');
-            if (displayDrivers.length === 0) return list.innerHTML = '<div class="empty-state"><i class="fas fa-bus-slash"></i><p>لا يوجد سائقون يطابقون بحثك</p></div>';
-
-            list.innerHTML = displayDrivers.map(route => {
-                const cleanPhone = route.driver_phone.replace(/\s+/g, '');
-                const waPhone = cleanPhone.startsWith('0') ? '964' + cleanPhone.substring(1) : '964' + cleanPhone;
-                const waMessage = encodeURIComponent(`مرحباً كابتن ${route.driver_name}، أنا طالب من جامعة الناجي. هل لديك مقعد شاغر في خط (${route.area})؟`);
-                
-                let etaText = '';
-                let distanceText = '';
-                
-                if (route.distance !== null) {
-                    const etaMinutes = Math.ceil((route.distance / 30) * 60);
-                    distanceText = `<i class="fas fa-location-arrow"></i> ${route.distance} كم`;
-                    etaText = etaMinutes <= 1 ? `<span class="distance-eta" style="color:var(--success); font-weight:900;">وصل الآن</span>` : `<span class="distance-eta">وصول بعد ${etaMinutes} دقيقة</span>`;
-                } else {
-                    distanceText = `غير متصل`;
-                }
-                
-                const distanceHTML = `<div class="distance-badge">${distanceText} ${etaText}</div>`;
-                const isLive = route.liveData ? 'border-right: 4px solid var(--success);' : '';
-                const isBus = route.vehicle_type === 'bus';
-                const typeIcon = isBus ? 'fa-bus' : 'fa-car';
-                const typeClass = isBus ? 'bus' : 'car';
-
-                return `
-                <div class="driver-card" id="card_${cleanPhone}" style="${isLive}" onclick="focusOnDriver('${cleanPhone}', ${route.liveData?.lat}, ${route.liveData?.lng})">
-                    <div class="driver-header">
-                        <div class="driver-avatar ${typeClass}"><i class="fas ${typeIcon}"></i></div>
-                        <div class="driver-info">
-                            <h3>${route.driver_name}</h3>
-                            <p><i class="fas fa-car" style="color:var(--primary-light);"></i> ${route.car || (isBus ? 'باص' : 'سيارة')}</p>
-                            <p><i class="fas fa-map-marker-alt" style="color:var(--danger);"></i> ${route.area}</p>
-                            <p><i class="fas fa-chair" style="color:var(--warning);"></i> ${route.available_seats} مقاعد | <i class="fas fa-money-bill-wave" style="color:var(--success);"></i> ${route.price} د.ع</p>
-                        </div>
-                        ${distanceHTML}
-                    </div>
-                    <div class="contact-actions" onclick="event.stopPropagation()">
-                        <a href="tel:${cleanPhone}" class="btn-call"><i class="fas fa-phone-alt"></i> اتصال</a>
-                        <a href="https://wa.me/${waPhone}?text=${waMessage}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i> واتساب</a>
-                    </div>
-                </div>
-                `;
-            }).join('');
+        // اطلب الموقع تلقائياً عند فتح القائمة (مرة واحدة فقط، وليس عند كل فتح)
+        if (!studentLocation && !locationDenied) {
+            locateStudent(true);
         }
 
-        function focusOnDriver(phone, lat, lng) {
-            document.querySelectorAll('.driver-card').forEach(el => el.classList.remove('highlight'));
-            const card = document.getElementById(`card_${phone}`);
-            if(card) card.classList.add('highlight');
-            
-            if(lat && lng) {
-                closeSheet();
-                map.flyTo([parseFloat(lat), parseFloat(lng)], 16, { animate: true, duration: 1.5 });
-                if(busMarkers[phone]) busMarkers[phone].openPopup();
-            } else {
-                showToast('هذا السائق غير متصل بالخريطة حالياً', 'error');
-            }
-        }
+        await loadRoutes();
+        renderDrivers();
+    }
 
-        function updateSingleBus(bus) {
-            if (!bus?.lat || !bus?.lng) return;
-            
-            // 🚨 تحديث وقت آخر استلام محلياً
-            bus.last_seen = Date.now(); 
+    /* ============ عرض السائقين ============ */
+    function renderDrivers() {
+        if (!isSheetOpen()) return;
 
-            const lat = parseFloat(bus.lat);
-            const lng = parseFloat(bus.lng);
-            
+        const searchQ = document.getElementById('searchInput').value.trim().toLowerCase();
+
+        let displayDrivers = allDrivers.map(route => {
+            const live = liveDrivers.find(l => l.driver_phone === route.driver_phone);
             let distance = null;
-            let etaMins = null;
-            if (studentLocation) {
-                distance = parseFloat(calculateDistance(studentLocation.lat, studentLocation.lng, lat, lng));
-                etaMins = Math.ceil((distance / 30) * 60);
+            if (live && studentLocation) {
+                distance = calculateDistance(studentLocation.lat, studentLocation.lng, live.lat, live.lng);
             }
+            return { ...route, liveData: live, distance };
+        });
 
-            let isClose = false;
-            if (distance !== null && distance <= 0.5) {
-                isClose = true;
-                if (!notifiedDrivers.has(bus.driver_phone)) {
-                    showToast(`🚨 تنبيه: الكابتن ${bus.driver_name} على وشك الوصول إليك!`, 'alert');
-                    notifiedDrivers.add(bus.driver_phone);
-                }
-            } else if (distance !== null && distance > 0.6) {
-                notifiedDrivers.delete(bus.driver_phone);
-            }
-
-            let iconToUse = bus.vehicle_type === 'bus' ? busIcon : carIcon;
-            if (isClose) {
-                iconToUse = L.divIcon({ 
-                    className: 'custom-bus-icon pulse-close', 
-                    html: `<div class="bus-icon-bg" style="background:#10b981; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas ${bus.vehicle_type === 'bus' ? 'fa-bus' : 'fa-car'}" style="font-size:14px;"></i></div>`, 
-                    iconSize: [36, 36], iconAnchor: [18, 18] 
-                });
-            }
-
-            const etaPopupText = etaMins !== null ? (etaMins <= 1 ? 'وصل الآن!' : `الوصول بعد ${etaMins} دقيقة`) : 'غير متصل';
-            const popupContent = `<b>كابتن ${bus.driver_name}</b><br>المناطق: ${bus.area}<br><span style="color:var(--primary); font-weight:900;">${etaPopupText}</span>`;
-
-            if (busMarkers[bus.driver_phone]) {
-                busMarkers[bus.driver_phone].setLatLng([lat, lng]);
-                busMarkers[bus.driver_phone].setIcon(iconToUse);
-                busMarkers[bus.driver_phone].setPopupContent(popupContent);
-            } else {
-                busMarkers[bus.driver_phone] = L.marker([lat, lng], { icon: iconToUse })
-                    .addTo(map)
-                    .bindPopup(popupContent)
-                    .on('click', () => {
-                        const cleanPhone = bus.driver_phone.replace(/\s+/g, '');
-                        openDriversList();
-                        setTimeout(() => {
-                            const card = document.getElementById(`card_${cleanPhone}`);
-                            if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300);
-                    });
-            }
-
-            if (bus.path && bus.path.length > 1) {
-                if (busPaths[bus.driver_phone]) {
-                    busPaths[bus.driver_phone].setLatLngs(bus.path);
-                    busPaths[bus.driver_phone].setStyle({ color: isClose ? '#10b981' : (bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6') });
-                } else {
-                    busPaths[bus.driver_phone] = L.polyline(bus.path, {
-                        color: isClose ? '#10b981' : (bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6'), 
-                        weight: 4, opacity: 0.7, dashArray: '8, 8', lineJoin: 'round'
-                    }).addTo(map);
-                }
-            }
+        if (searchQ) {
+            displayDrivers = displayDrivers.filter(d =>
+                (d.driver_name && String(d.driver_name).toLowerCase().includes(searchQ)) ||
+                (d.area && String(d.area).toLowerCase().includes(searchQ))
+            );
         }
 
-        async function fetchLiveBuses() {
-            const { data } = await sb.from('live_buses').select('*');
-            
-            // تحديث القائمة وإضافة وقت الاستلام المحلي
-            liveDrivers = (data || []).map(bus => {
-                // إذا كان الباص موجوداً مسبقاً، نحافظ على وقت آخر استلام له
+        // الأولوية: مباشر ثم الأقرب
+        displayDrivers.sort((a, b) => {
+            const aLive = a.liveData ? 0 : 1;
+            const bLive = b.liveData ? 0 : 1;
+            if (aLive !== bLive) return aLive - bLive;
+            if (a.distance === null) return 1;
+            if (b.distance === null) return -1;
+            return a.distance - b.distance;
+        });
+
+        const list = document.getElementById('listContainer');
+        if (displayDrivers.length === 0) {
+            list.innerHTML = '<div class="empty-state"><i class="fas fa-bus-slash"></i><p>لا يوجد سائقون متاحون</p></div>';
+            return;
+        }
+
+        list.innerHTML = displayDrivers.map(route => {
+            const safePhone = sanitizePhone(route.driver_phone);
+            const waPhone = toWaPhone(route.driver_phone);
+            const safeName = esc(route.driver_name);
+            const safeArea = esc(route.area);
+            const safeCar = esc(route.car || '');
+            const waMessage = encodeURIComponent(`مرحباً كابتن ${route.driver_name}، أنا طالب من جامعة الناجي. هل لديك مقعد شاغر في خط (${route.area})؟`);
+
+            // شارة المسافة
+            let distanceHTML;
+            if (route.liveData && route.distance !== null) {
+                const etaMinutes = Math.ceil((route.distance / AVG_SPEED_KMH) * 60);
+                const etaText = etaMinutes <= 1
+                    ? `<span class="distance-eta" style="color:var(--success); font-weight:900;">وصل الآن</span>`
+                    : `<span class="distance-eta">وصول بعد ${etaMinutes} دقيقة</span>`;
+                distanceHTML = `<div class="distance-badge live-dist"><i class="fas fa-location-arrow"></i> ${route.distance} كم ${etaText}</div>`;
+            } else if (route.liveData) {
+                distanceHTML = `<div class="distance-badge live-no-loc"><i class="fas fa-satellite-dish"></i> مباشر</div>`;
+            } else {
+                distanceHTML = `<div class="distance-badge offline"><i class="fas fa-power-off"></i> غير متصل</div>`;
+            }
+
+            const isLive = route.liveData ? 'border-right: 4px solid var(--success);' : '';
+            const isBus = route.vehicle_type === 'bus';
+            const typeIcon = isBus ? 'fa-bus' : 'fa-car';
+            const typeClass = isBus ? 'bus' : 'car';
+
+            const cardId = `card_${safePhone}`;
+            const phoneAttr = esc(safePhone);
+            const latArg = route.liveData?.lat ?? 'null';
+            const lngArg = route.liveData?.lng ?? 'null';
+
+            return `
+            <div class="driver-card" id="${cardId}" style="${isLive}" onclick="focusOnDriver('${phoneAttr}', ${latArg}, ${lngArg})">
+                <div class="driver-header">
+                    <div class="driver-avatar ${typeClass}"><i class="fas ${typeIcon}"></i></div>
+                    <div class="driver-info">
+                        <h3>${safeName}</h3>
+                        <p><i class="fas fa-car" style="color:var(--primary-light);"></i> ${safeCar || (isBus ? 'باص' : 'سيارة')}</p>
+                        <p><i class="fas fa-map-marker-alt" style="color:var(--danger);"></i> ${safeArea}</p>
+                        <p><i class="fas fa-chair" style="color:var(--warning);"></i> ${Number(route.available_seats) || 0} مقاعد | <i class="fas fa-money-bill-wave" style="color:var(--success);"></i> ${Number(route.price) || 0} د.ع</p>
+                    </div>
+                    ${distanceHTML}
+                </div>
+                <div class="contact-actions" onclick="event.stopPropagation()">
+                    <a href="tel:${phoneAttr}" class="btn-call"><i class="fas fa-phone-alt"></i> اتصال</a>
+                    <a href="https://wa.me/${waPhone}?text=${waMessage}" target="_blank" rel="noopener" class="btn-wa"><i class="fab fa-whatsapp"></i> واتساب</a>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /* ============ تركيز على سائق ============ */
+    function focusOnDriver(phone, lat, lng) {
+        document.querySelectorAll('.driver-card').forEach(el => el.classList.remove('highlight'));
+        const card = document.getElementById(`card_${sanitizePhone(phone)}`);
+        if (card) card.classList.add('highlight');
+
+        if (lat != null && lng != null) {
+            closeSheet();
+            map.flyTo([parseFloat(lat), parseFloat(lng)], 16, { animate: true, duration: 1.5 });
+            if (busMarkers[phone]) busMarkers[phone].openPopup();
+        } else {
+            showToast('هذا السائق غير متصل بالخريطة حالياً', 'error');
+        }
+    }
+
+    /* ============ تحديث ماركر السائق ============ */
+    function updateSingleBus(bus) {
+        if (bus?.lat == null || bus?.lng == null) return;
+
+        const lat = parseFloat(bus.lat);
+        const lng = parseFloat(bus.lng);
+        if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+        const phone = bus.driver_phone;
+        let distance = null;
+        let etaMins = null;
+        if (studentLocation) {
+            distance = calculateDistance(studentLocation.lat, studentLocation.lng, lat, lng);
+            etaMins = Math.ceil((distance / AVG_SPEED_KMH) * 60);
+        }
+
+        let isClose = false;
+        if (distance !== null && distance <= 0.5) {
+            isClose = true;
+            if (!notifiedDrivers.has(phone)) {
+                showToast(`🚨 الكابتن ${bus.driver_name} على وشك الوصول إليك!`, 'alert');
+                notifiedDrivers.add(phone);
+            }
+        } else if (distance !== null && distance > 0.6) {
+            notifiedDrivers.delete(phone);
+        }
+
+        // تحديث الأيقونة فقط عند تغيّر حالة القرب (لتجنّب قطع الأنيميشن)
+        const isBus = bus.vehicle_type === 'bus';
+        const desiredIcon = isClose
+            ? (isBus ? pulseIconBus : pulseIconCar)
+            : (isBus ? busIcon : carIcon);
+
+        const etaPopupText = etaMins !== null
+            ? (etaMins <= 1 ? 'وصل الآن!' : `الوصول بعد ${etaMins} دقيقة`)
+            : 'غير متصل';
+
+        const popupContent = `<b>كابتن ${esc(bus.driver_name)}</b><br>المناطق: ${esc(bus.area)}<br><span style="color:var(--primary); font-weight:900;">${etaPopupText}</span>`;
+
+        if (busMarkers[phone]) {
+            busMarkers[phone].setLatLng([lat, lng]);
+            if (lastIsClose[phone] !== isClose) {
+                busMarkers[phone].setIcon(desiredIcon);
+                lastIsClose[phone] = isClose;
+            }
+            busMarkers[phone].setPopupContent(popupContent);
+        } else {
+            busMarkers[phone] = L.marker([lat, lng], { icon: desiredIcon })
+                .addTo(map)
+                .bindPopup(popupContent)
+                .on('click', () => {
+                    document.getElementById('searchInput').value = ''; // امسح الفلتر ليظهر الكارد
+                    openDriversList();
+                    setTimeout(() => {
+                        const card = document.getElementById(`card_${sanitizePhone(phone)}`);
+                        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 350);
+                });
+            lastIsClose[phone] = isClose;
+        }
+
+        // المسار
+        const lineColor = isClose ? '#10b981' : (bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6');
+        if (bus.path && bus.path.length > 1) {
+            if (busPaths[phone]) {
+                busPaths[phone].setLatLngs(bus.path);
+                busPaths[phone].setStyle({ color: lineColor });
+            } else {
+                busPaths[phone] = L.polyline(bus.path, {
+                    color: lineColor, weight: 4, opacity: 0.7, dashArray: '8, 8', lineJoin: 'round'
+                }).addTo(map);
+            }
+        }
+    }
+
+    /* ============ إزالة ماركر ============ */
+    function removeBus(phone) {
+        if (busMarkers[phone]) { map.removeLayer(busMarkers[phone]); delete busMarkers[phone]; }
+        if (busPaths[phone]) { map.removeLayer(busPaths[phone]); delete busPaths[phone]; }
+        delete lastIsClose[phone];
+        notifiedDrivers.delete(phone);
+    }
+
+    /* ============ تحديث عداد المباشرين ============ */
+    function refreshCounter() {
+        const counter = document.getElementById('liveCounter');
+        const countText = document.getElementById('busCount');
+        if (liveDrivers.length > 0) {
+            counter.style.display = 'flex';
+            countText.textContent = liveDrivers.length;
+        } else {
+            counter.style.display = 'none';
+        }
+    }
+
+    /* ============ جلب السائقين المباشرين ============ */
+    async function fetchLiveBuses() {
+        try {
+            const { data, error } = await sb.from('live_buses').select('*');
+            if (error) throw error;
+
+            const now = Date.now();
+            const freshData = [];
+
+            (data || []).forEach(bus => {
+                if (bus.lat == null || bus.lng == null) return;
+
                 const existing = liveDrivers.find(d => d.driver_phone === bus.driver_phone);
-                bus.last_seen = existing ? existing.last_seen : Date.now();
-                return bus;
+                if (existing) {
+                    // حافظ على last_seen الحالي (realtime هو المصدر)
+                    bus.last_seen = existing.last_seen;
+                } else {
+                    // اعتمد على updated_at الحقيقي من DB
+                    const updatedAt = bus.updated_at ? new Date(bus.updated_at).getTime() : now;
+                    bus.last_seen = updatedAt;
+                }
+
+                // تجاهل الصفوف القديمة جداً
+                if ((now - bus.last_seen) <= LIVE_TIMEOUT_MS) {
+                    freshData.push(bus);
+                }
             });
 
-            const counter = document.getElementById('liveCounter');
-            const countText = document.getElementById('busCount');
-            if(liveDrivers.length > 0) {
-                counter.style.display = 'flex';
-                countText.textContent = liveDrivers.length;
-            } else {
-                counter.style.display = 'none';
-            }
-
-            const currentPhones = liveDrivers.map(b => b.driver_phone);
-
-            // إزالة الباصات التي اختفت من قاعدة البيانات
-            for (let phone in busMarkers) {
-                if (!currentPhones.includes(phone)) {
-                    map.removeLayer(busMarkers[phone]);
-                    delete busMarkers[phone];
-                    if (busPaths[phone]) {
-                        map.removeLayer(busPaths[phone]);
-                        delete busPaths[phone];
-                    }
+            // احذف ماركرات السائقين الذين اختفوا
+            for (const phone in busMarkers) {
+                if (!freshData.find(b => b.driver_phone === phone)) {
+                    removeBus(phone);
                 }
             }
 
-            liveDrivers.forEach(bus => updateSingleBus(bus));
+            liveDrivers = freshData;
+            liveDrivers.forEach(updateSingleBus);
+            refreshCounter();
 
-            if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
+            if (isSheetOpen()) renderDrivers();
+        } catch (e) {
+            console.error('fetchLiveBuses', e);
         }
+    }
 
-        function loadLiveBuses() {
-            fetchLiveBuses();
+    /* ============ الاشتراكات الحية ============ */
+    function loadLiveBuses() {
+        fetchLiveBuses();
 
-            sb.channel('live_buses_channel')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
-                    
-                    if (payload.eventType === 'DELETE') {
-                        // 🚨 الحل الجذري: البحث عن الباص بواسطة الـ id وحذفه فوراً
-                        const deletedId = payload.old.id;
-                        const busToDelete = liveDrivers.find(b => b.id === deletedId);
-                        
-                        if (busToDelete) {
-                            const phone = busToDelete.driver_phone;
-                            if (busMarkers[phone]) { map.removeLayer(busMarkers[phone]); delete busMarkers[phone]; }
-                            if (busPaths[phone]) { map.removeLayer(busPaths[phone]); delete busPaths[phone]; }
-                            liveDrivers = liveDrivers.filter(d => d.id !== deletedId);
-                        } else {
-                            // إذا لم نجده بالـ ID، نقوم بتحديث شامل كخطة بديلة
-                            fetchLiveBuses();
-                        }
-                    } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                        const bus = payload.new;
-                        if (!bus) return;
-                        
-                        bus.last_seen = Date.now(); // تحديث وقت الاستلام
-                        updateSingleBus(bus);
-                        
-                        const idx = liveDrivers.findIndex(d => d.driver_phone === bus.driver_phone);
-                        if(idx > -1) liveDrivers[idx] = bus;
-                        else liveDrivers.push(bus);
+        // 1) اشتراك live_buses (المواقع)
+        sb.channel('live_buses_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
+                if (payload.eventType === 'DELETE') {
+                    const deletedPhone = payload.old?.driver_phone;
+                    if (deletedPhone) {
+                        liveDrivers = liveDrivers.filter(d => d.driver_phone !== deletedPhone);
+                        removeBus(deletedPhone);
+                    } else {
+                        fetchLiveBuses();
                     }
-                    
-                    const counter = document.getElementById('liveCounter');
-                    const countText = document.getElementById('busCount');
-                    if(liveDrivers.length > 0) { counter.style.display = 'flex'; countText.textContent = liveDrivers.length; }
-                    else { counter.style.display = 'none'; }
+                } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                    const bus = payload.new;
+                    if (!bus || bus.lat == null || bus.lng == null) return;
 
-                    if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
-                }).subscribe();
+                    bus.last_seen = Date.now();
+                    updateSingleBus(bus);
 
-            // 🚨 الفحص المحلي: كل 5 ثوانٍ نتحقق من وقت "آخر استلام". إذا مر 45 ثانية بدون تحديث، نمسحه.
-            setInterval(() => {
-                const now = Date.now();
-                liveDrivers.forEach(bus => {
-                    if (bus.last_seen && (now - bus.last_seen) > 45000) {
-                        if (busMarkers[bus.driver_phone]) { map.removeLayer(busMarkers[bus.driver_phone]); delete busMarkers[bus.driver_phone]; }
-                        if (busPaths[bus.driver_phone]) { map.removeLayer(busPaths[bus.driver_phone]); delete busPaths[bus.driver_phone]; }
-                        liveDrivers = liveDrivers.filter(d => d.driver_phone !== bus.driver_phone);
-                        
-                        if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
-                        
-                        const counter = document.getElementById('liveCounter');
-                        const countText = document.getElementById('busCount');
-                        if(liveDrivers.length > 0) { counter.style.display = 'flex'; countText.textContent = liveDrivers.length; }
-                        else { counter.style.display = 'none'; }
+                    const idx = liveDrivers.findIndex(d => d.driver_phone === bus.driver_phone);
+                    if (idx > -1) liveDrivers[idx] = bus;
+                    else liveDrivers.push(bus);
+                }
+                refreshCounter();
+                if (isSheetOpen()) renderDrivers();
+            }).subscribe();
+
+        // 2) اشتراك routes (المقاعد + الإضافة/الإزالة)
+        sb.channel('routes_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'routes' }, payload => {
+                if (payload.eventType === 'DELETE') {
+                    const phone = payload.old?.driver_phone;
+                    if (phone) {
+                        allDrivers = allDrivers.filter(d => d.driver_phone !== phone);
+                        routesLastFetch = Date.now();
                     }
-                });
-            }, 5000);
-        }
+                } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                    const route = payload.new;
+                    if (!route) return;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStudentData(); 
-            locateStudent();
-            loadLiveBuses();
-        });
-    </script>
+                    if (route.active === false) {
+                        allDrivers = allDrivers.filter(d => d.driver_phone !== route.driver_phone);
+                    } else {
+                        const idx = allDrivers.findIndex(d => d.driver_phone === route.driver_phone);
+                        if (idx > -1) allDrivers[idx] = route;
+                        else allDrivers.push(route);
+                    }
+                    routesLastFetch = Date.now();
+                }
+                if (isSheetOpen()) renderDrivers();
+            }).subscribe();
+
+        // 3) تنظيف السائقين المنقطعين (كل 5 ثوانٍ)
+        setInterval(() => {
+            const now = Date.now();
+            let changed = false;
+            const stillAlive = [];
+
+            liveDrivers.forEach(bus => {
+                if (bus.last_seen && (now - bus.last_seen) > LIVE_TIMEOUT_MS) {
+                    removeBus(bus.driver_phone);
+                    changed = true;
+                } else {
+                    stillAlive.push(bus);
+                }
+            });
+
+            if (changed) {
+                liveDrivers = stillAlive;
+                refreshCounter();
+                if (isSheetOpen()) renderDrivers();
+            }
+        }, 5000);
+    }
+
+    /* ============ التهيئة ============ */
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStudentData();
+        loadRoutes(true);     // جلب أولي (بدون طلب موقع)
+        loadLiveBuses();
+        // لا نطلب الموقع تلقائياً — يُطلب عند فتح قائمة السائقين أو بالزر
+    });
+</script>
 </body>
 </html>
