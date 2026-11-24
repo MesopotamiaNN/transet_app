@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naji-transport-v1';
+const CACHE_NAME = 'naji-transport-v3';
 const ASSETS = [
   './index.html',
   './Driver.html',

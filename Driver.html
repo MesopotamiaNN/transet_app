@@ -49,7 +49,7 @@
     .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-md) !important; border-radius: 12px !important; overflow: hidden; }
     .leaflet-control-zoom a { background: var(--white) !important; color: var(--text) !important; border-bottom: 1px solid var(--border-light) !important; }
 
-    /* شريط الحالة العلوي (مطابق لواجهة الطالب) */
+    /* شريط الحالة العلوي */
     .top-bar {
         position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
         z-index: 1000; display: flex; justify-content: center; width: 90%; max-width: 400px; pointer-events: none;
@@ -69,7 +69,7 @@
     .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); }
     .control-btn:active { transform: scale(0.85); }
 
-    /* شريط التنقل السفلي (مطابق لواجهة الطالب) */
+    /* شريط التنقل السفلي */
     .bottom-nav { 
         position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
         width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); 
@@ -164,14 +164,12 @@
 
     <div id="map"></div>
     
-    <!-- شريط الحالة العلوي -->
     <div class="top-bar" id="driverTopBar" style="display: none;">
         <div class="status-badge" id="statusBadge">
             <i class="fas fa-power-off" id="statusIcon"></i> <span id="statusText">غير متصل</span>
         </div>
     </div>
 
-    <!-- شريط التنقل السفلي -->
     <div class="bottom-nav" id="driverNav">
         <div class="nav-item" onclick="closeSheet()"><i class="fas fa-map-marked-alt"></i> الخريطة</div>
         <div class="nav-item" onclick="openSeatsSheet()"><i class="fas fa-chair"></i> المقاعد</div>
@@ -186,12 +184,10 @@
         <div class="nav-item" onclick="stopTrip()" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> إنهاء</div>
     </div>
 
-    <!-- أزرار التحكم بالخريطة (الوضع الليلي) -->
     <div class="map-controls" id="driverMapControls">
         <button class="control-btn" id="themeToggleDriver" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </div>
 
-    <!-- نافذة إدارة المقاعد -->
     <div class="bottom-sheet" id="seatsSheet">
         <div class="drag-handle"></div>
         <div class="sheet-header">
@@ -290,15 +286,9 @@
             await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
         }
 
-        function openSeatsSheet() { 
-            document.getElementById('seatsSheet').classList.add('open'); 
-        }
-        function closeSeatsSheet() { 
-            document.getElementById('seatsSheet').classList.remove('open'); 
-        }
-        function closeSheet() { 
-            closeSeatsSheet(); 
-        }
+        function openSeatsSheet() { document.getElementById('seatsSheet').classList.add('open'); }
+        function closeSeatsSheet() { document.getElementById('seatsSheet').classList.remove('open'); }
+        function closeSheet() { closeSeatsSheet(); }
 
         async function updateSeats(change) {
             let newSeats = currentAvailableSeats + change;
@@ -306,6 +296,25 @@
             currentAvailableSeats = newSeats;
             document.getElementById('displayAvailableSeats').textContent = currentAvailableSeats;
             await sb.from('routes').update({ available_seats: currentAvailableSeats }).eq('driver_phone', driver.phone);
+        }
+
+        async function sendLocation(lat, lng) {
+            if (!myMarker) { 
+                myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map); 
+                map.setView([lat, lng], 16); 
+            } else { 
+                myMarker.setLatLng([lat, lng]); 
+            }
+
+            currentPath.push([lat, lng]);
+            if (currentPath.length > 60) currentPath.shift();
+
+            try {
+                await sb.from('live_buses').upsert({ 
+                    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, 
+                    vehicle_type: driver.vehicleType, lat, lng, path: currentPath, updated_at: new Date().toISOString() 
+                }, { onConflict: 'driver_phone' });
+            } catch (err) { console.error(err); }
         }
 
         async function toggleLive() {
@@ -318,19 +327,24 @@
             if (!isLive) {
                 if (!navigator.geolocation) return showToast('جهازك لا يدعم تحديد الموقع', 'error');
                 currentPath = []; 
-                watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
                 isLive = true;
                 
-                // تحديث المفتاح
+                // 🔥 السرعة القصوى: جلب الموقع فوراً وإرساله
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { 
+                        sendLocation(pos.coords.latitude, pos.coords.longitude);
+                        watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+                    },
+                    (err) => { showToast('تعذر جلب الموقع، تأكد من GPS', 'error'); isLive = false; },
+                    { enableHighAccuracy: true }
+                );
+                
                 toggleSwitch.classList.add('active');
                 toggleText.classList.add('active');
                 toggleText.textContent = 'مباشر';
-                
-                // تحديث الشريط العلوي
                 statusBadge.classList.add('live');
                 statusText.textContent = 'أنت متصل (مباشر)';
                 statusIcon.className = 'fas fa-satellite-dish';
-                
                 showToast('أنت الآن مباشر على الخريطة', 'success');
             } else {
                 isLive = false;
@@ -338,17 +352,12 @@
                 
                 try {
                     await sb.from('live_buses').delete().eq('driver_phone', driver.phone);
-                    
-                    // تحديث المفتاح
                     toggleSwitch.classList.remove('active');
                     toggleText.classList.remove('active');
                     toggleText.textContent = 'مغلق';
-                    
-                    // تحديث الشريط العلوي
                     statusBadge.classList.remove('live');
                     statusText.textContent = 'غير متصل';
                     statusIcon.className = 'fas fa-power-off';
-                    
                     if(myMarker) { map.removeLayer(myMarker); myMarker = null; }
                     showToast('تم إخفاء سيارتك من الخريطة', 'error');
                 } catch (err) {
@@ -369,26 +378,21 @@
         let lastSent = 0;
         async function onPosition(pos) {
             if (!isLive) return; 
-            const { latitude: lat, longitude: lng } = pos.coords;
-            if (!myMarker) { myMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map); map.setView([lat, lng], 16); }
-            else { myMarker.setLatLng([lat, lng]); }
-
             const now = Date.now();
-            if (now - lastSent < 3000) return;
+            if (now - lastSent < 2000) return; // تحديث كل ثانيتين
             lastSent = now;
 
-            currentPath.push([lat, lng]);
-            if (currentPath.length > 60) currentPath.shift();
-
-            try {
-                await sb.from('live_buses').upsert({ 
-                    driver_phone: driver.phone, driver_name: driver.name, area: driver.area, 
-                    vehicle_type: driver.vehicleType, lat, lng, path: currentPath, updated_at: new Date().toISOString() 
-                }, { onConflict: 'driver_phone' });
-            } catch (err) { console.error(err); }
+            sendLocation(pos.coords.latitude, pos.coords.longitude);
         }
 
         function onError(err) { showToast('تعذر جلب الموقع. تأكد من GPS.', 'error'); if(isLive) toggleLive(); }
+
+        // مسح الموقع عند إغلاق الصفحة
+        window.addEventListener('beforeunload', function (e) {
+            if (isLive && driver) {
+                sb.from('live_buses').delete().eq('driver_phone', driver.phone).then();
+            }
+        });
 
         map.on('click', closeSheet);
 
