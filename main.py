@@ -32,15 +32,10 @@ MAP_HTML = """
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #f8f9fa; overflow: hidden; }
         #map { width: 100%; height: 100%; background: #f8f9fa; }
-        
         .leaflet-container { background: #f8f9fa; }
         .custom-icon { background: transparent; border: none; }
-        
-        /* تنسيق النافذة المنبثقة (Popup) بنمط فاتح */
         .leaflet-popup-content-wrapper { background: #ffffff; color: #1f2937; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .leaflet-popup-tip { background: #ffffff; }
-        
-        /* لوحة التحكم داخل الخريطة بنمط فاتح */
         .control-panel {
             background: #ffffff; color: #1f2937; padding: 10px; border-radius: 12px;
             display: flex; flex-direction: column; gap: 8px; font-family: Tahoma, sans-serif;
@@ -59,13 +54,9 @@ MAP_HTML = """
 <div id="map"></div>
 <script>
     const map = L.map('map', { zoomControl: false }).setView([33.2765, 44.3380], 12);
-    
-    // خريطة OpenStreetMap الفاتحة (بدون فلاتر عكس ألوان)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
+        maxZoom: 19, attribution: '&copy; OpenStreetMap'
     }).addTo(map);
-    
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     let driverMarkers = {}, studentMarkers = {}, pathLines = {};
@@ -89,39 +80,55 @@ MAP_HTML = """
         iconSize: [28, 28], iconAnchor: [14, 14]
     });
 
-    function updateData(drivers, students) {
-        window._lastDrivers = drivers;
-        window._lastStudents = students;
+    function updateData(markers) {
+        window._lastMarkers = markers;
         
-        // === السائقين ===
         const currentDriverIds = new Set();
-        drivers.forEach(d => {
+        const currentStudentIds = new Set();
+
+        markers.forEach(d => {
             if (!d.lat || !d.lng) return;
             const id = d.driver_phone;
-            currentDriverIds.add(id);
-            
-            const popup = `<div style="direction: rtl; text-align: right; font-family: Tahoma;">
-                <b style="font-size:14px; color:#10b981;">${esc(d.driver_name)}</b><br>
-                <span style="color:#64748b;">${esc(d.area)}</span><br>
-                <span style="color:#d97706; font-weight:bold;">${esc(d.available_seats)} مقاعد شاغرة</span>
-            </div>`;
+            const isStudent = d.vehicle_type === 'student';
 
-            if (driverMarkers[id]) {
-                driverMarkers[id].setLatLng([d.lat, d.lng]).setPopupContent(popup);
-            } else {
-                driverMarkers[id] = L.marker([d.lat, d.lng], { icon: driverIcon })
-                    .addTo(map).bindPopup(popup);
-            }
-
-            if (showPaths && d.path && d.path.length > 1) {
-                if (pathLines[id]) {
-                    pathLines[id].setLatLngs(d.path);
-                } else {
-                    pathLines[id] = L.polyline(d.path, { color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '8, 8' }).addTo(map);
+            if (isStudent) {
+                currentStudentIds.add(id);
+                if (showStudents) {
+                    const popup = `<div style="direction: rtl; text-align: right; font-family: Tahoma;">
+                        <b>${esc(d.driver_name)}</b><br><span style="color:#3b82f6; font-weight:bold;">طالب</span>
+                    </div>`;
+                    if (studentMarkers[id]) {
+                        studentMarkers[id].setLatLng([d.lat, d.lng]).setPopupContent(popup);
+                    } else {
+                        studentMarkers[id] = L.marker([d.lat, d.lng], { icon: studentIcon })
+                            .addTo(map).bindPopup(popup);
+                    }
                 }
-            } else if (pathLines[id]) {
-                map.removeLayer(pathLines[id]);
-                delete pathLines[id];
+            } else {
+                currentDriverIds.add(id);
+                const popup = `<div style="direction: rtl; text-align: right; font-family: Tahoma;">
+                    <b style="font-size:14px; color:#10b981;">${esc(d.driver_name)}</b><br>
+                    <span style="color:#64748b;">${esc(d.area)}</span><br>
+                    <span style="color:#d97706; font-weight:bold;">${esc(d.available_seats)} مقاعد شاغرة</span>
+                </div>`;
+
+                if (driverMarkers[id]) {
+                    driverMarkers[id].setLatLng([d.lat, d.lng]).setPopupContent(popup);
+                } else {
+                    driverMarkers[id] = L.marker([d.lat, d.lng], { icon: driverIcon })
+                        .addTo(map).bindPopup(popup);
+                }
+
+                if (showPaths && d.path && d.path.length > 1) {
+                    if (pathLines[id]) {
+                        pathLines[id].setLatLngs(d.path);
+                    } else {
+                        pathLines[id] = L.polyline(d.path, { color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '8, 8' }).addTo(map);
+                    }
+                } else if (pathLines[id]) {
+                    map.removeLayer(pathLines[id]);
+                    delete pathLines[id];
+                }
             }
         });
 
@@ -129,40 +136,21 @@ MAP_HTML = """
             if (!currentDriverIds.has(id)) {
                 map.removeLayer(driverMarkers[id]);
                 delete driverMarkers[id];
-                if (pathLines[id]) {
-                    map.removeLayer(pathLines[id]);
-                    delete pathLines[id];
-                }
+                if (pathLines[id]) { map.removeLayer(pathLines[id]); delete pathLines[id]; }
             }
         }
 
-        // === الطلاب ===
-        if (showStudents) {
-            const currentStudentIds = new Set();
-            students.forEach(s => {
-                if (!s.lat || !s.lng) return; // يتخطى الطلاب الذين لا يملكون إحداثيات
-                const id = s.reg_id || s.id || Math.random().toString();
-                currentStudentIds.add(id);
-                const popup = `<div style="direction: rtl; text-align: right; font-family: Tahoma;">
-                    <b>${esc(s.name)}</b><br><span style="color:#3b82f6; font-weight:bold;">طالب</span>
-                </div>`;
-                if (studentMarkers[id]) {
-                    studentMarkers[id].setLatLng([s.lat, s.lng]).setPopupContent(popup);
-                } else {
-                    studentMarkers[id] = L.marker([s.lat, s.lng], { icon: studentIcon })
-                        .addTo(map).bindPopup(popup);
-                }
-            });
+        if (!showStudents) {
+            for (let id in studentMarkers) {
+                map.removeLayer(studentMarkers[id]);
+                delete studentMarkers[id];
+            }
+        } else {
             for (let id in studentMarkers) {
                 if (!currentStudentIds.has(id)) {
                     map.removeLayer(studentMarkers[id]);
                     delete studentMarkers[id];
                 }
-            }
-        } else {
-            for (let id in studentMarkers) {
-                map.removeLayer(studentMarkers[id]);
-                delete studentMarkers[id];
             }
         }
     }
@@ -178,13 +166,13 @@ MAP_HTML = """
     function toggleStudents(btn) {
         showStudents = !showStudents;
         btn.classList.toggle('active', showStudents);
-        updateData(window._lastDrivers || [], window._lastStudents || []);
+        updateData(window._lastMarkers || []);
     }
 
     function togglePaths(btn) {
         showPaths = !showPaths;
         btn.classList.toggle('active', showPaths);
-        updateData(window._lastDrivers || [], window._lastStudents || []);
+        updateData(window._lastMarkers || []);
     }
 
     const controlPanel = L.control({position: 'topright'});
@@ -243,7 +231,7 @@ QDialog { background-color:#0b1220; }
 
 # ================== جلب البيانات ==================
 class FetchWorker(QThread):
-    data_ready = Signal(list, list, list)
+    data_ready = Signal(list, list)
     error = Signal(str)
 
     def run(self):
@@ -251,13 +239,11 @@ class FetchWorker(QThread):
             h = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
             r1 = requests.get(f"{SUPABASE_URL}/rest/v1/routes?select=*", headers=h, timeout=10)
             r2 = requests.get(f"{SUPABASE_URL}/rest/v1/live_buses?select=*", headers=h, timeout=10)
-            r3 = requests.get(f"{SUPABASE_URL}/rest/v1/students?select=*", headers=h, timeout=10)
             
             routes = r1.json() if r1.ok and isinstance(r1.json(), list) else []
             live = r2.json() if r2.ok and isinstance(r2.json(), list) else []
-            students = r3.json() if r3.ok and isinstance(r3.json(), list) else []
             
-            self.data_ready.emit(routes, live, students)
+            self.data_ready.emit(routes, live)
         except Exception as e:
             self.error.emit(str(e))
 
@@ -413,7 +399,6 @@ class CenterPanel(QFrame):
         self.setObjectName("panel")
         v = QVBoxLayout(self); v.setContentsMargins(20,20,20,20); v.setSpacing(14)
 
-        # الرأس
         head = QHBoxLayout()
         title = QLabel("لوحة تحكم خدمة النقل"); title.setObjectName("appTitle")
         head.addWidget(title); head.addStretch()
@@ -431,7 +416,6 @@ class CenterPanel(QFrame):
         self.last_update = QLabel("آخر تحديث: —"); self.last_update.setObjectName("muted")
         head.addWidget(self.last_update); v.addLayout(head)
 
-        # الإحصائيات
         cards = QHBoxLayout(); cards.setSpacing(12)
         self.c_total  = StatCard("إجمالي السائقين", "#3b82f6")
         self.c_live   = StatCard("المباشرون الآن", "#10b981")
@@ -441,7 +425,6 @@ class CenterPanel(QFrame):
             cards.addWidget(c)
         v.addLayout(cards)
 
-        # شريط البحث والإجراءات
         tb = QHBoxLayout()
         self.search = QLineEdit(); self.search.setPlaceholderText("🔍 البحث بالاسم أو المنطقة أو الهاتف...")
         self.search.textChanged.connect(self.render_list)
@@ -450,7 +433,6 @@ class CenterPanel(QFrame):
         ab = QPushButton("＋ إضافة سائق"); ab.setObjectName("primary"); ab.clicked.connect(main_window.open_add); tb.addWidget(ab)
         v.addLayout(tb)
 
-        # المكدس: 0=الخريطة، 1=القائمة
         self.stack = QStackedWidget()
         
         self.map_view = QWebEngineView()
@@ -479,41 +461,31 @@ class CenterPanel(QFrame):
 
     def on_map_loaded(self):
         self.map_ready = True
-        self.update_map(self.main.routes_data, self.main.live_data, self.main.students_data)
+        self.update_map(self.main.routes_data, self.main.live_data)
 
-    def update_map(self, routes, live, students):
+    def update_map(self, routes, live):
         if not self.map_ready: return
 
-        drivers_data = []
+        markers_data = []
         for l in live:
             route = next((r for r in routes if r.get('driver_phone') == l.get('driver_phone')), {})
-            drivers_data.append({
+            markers_data.append({
                 'driver_phone': l.get('driver_phone'),
                 'driver_name': l.get('driver_name'),
                 'area': l.get('area'),
+                'vehicle_type': l.get('vehicle_type', 'bus'),
                 'lat': l.get('lat'),
                 'lng': l.get('lng'),
                 'path': l.get('path', []),
                 'available_seats': route.get('available_seats', 0)
             })
 
-        students_data = []
-        for s in students:
-            # التحقق من وجود الإحداثيات في قاعدة البيانات
-            if s.get('lat') and s.get('lng'):
-                students_data.append({
-                    'reg_id': s.get('reg_id'),
-                    'name': s.get('name'),
-                    'lat': s.get('lat'),
-                    'lng': s.get('lng')
-                })
-
-        js = f"updateData({json.dumps(drivers_data, ensure_ascii=False)}, {json.dumps(students_data, ensure_ascii=False)});"
+        js = f"updateData({json.dumps(markers_data, ensure_ascii=False)});"
         self.map_view.page().runJavaScript(js)
 
     def render_list(self):
         q = self.search.text().strip().lower()
-        live_phones = {l.get("driver_phone") for l in self.main.live_data}
+        live_phones = {l.get("driver_phone") for l in self.main.live_data if l.get("vehicle_type") != "student"}
 
         while self.list_v.count() > 1:
             it = self.list_v.takeAt(0)
@@ -534,10 +506,10 @@ class CenterPanel(QFrame):
             self.list_v.insertWidget(self.list_v.count()-1, DriverCard(r, live))
 
     def update_stats(self, routes, live):
-        live_phones = {l.get("driver_phone") for l in live}
         active = [r for r in routes if r.get("active")]
         total = len(active)
-        live_count = len(live_phones & {r.get("driver_phone") for r in active})
+        live_drivers = [l for l in live if l.get("vehicle_type") != "student"]
+        live_count = len({l.get("driver_phone") for l in live_drivers} & {r.get("driver_phone") for r in active})
         seats = sum(int(r.get("available_seats", 0) or 0) for r in active)
 
         self.c_total.set_value(total); self.c_live.set_value(live_count)
@@ -556,7 +528,7 @@ class MainWindow(QMainWindow):
         self.resize(1400, 900); self.setMinimumSize(1100, 700)
 
         self.is_fetching = False
-        self.routes_data, self.live_data, self.students_data = [], [], []
+        self.routes_data, self.live_data = [], []
 
         root = QWidget(); root.setObjectName("root"); self.setCentralWidget(root)
         H = QHBoxLayout(root); H.setContentsMargins(16,16,16,16); H.setSpacing(16)
@@ -598,12 +570,12 @@ class MainWindow(QMainWindow):
         self.worker.error.connect(self.on_error)
         self.worker.start()
 
-    def on_data(self, routes, live, students):
+    def on_data(self, routes, live):
         self.is_fetching = False
-        self.routes_data, self.live_data, self.students_data = routes, live, students
+        self.routes_data, self.live_data = routes, live
         self.center_panel.update_stats(routes, live)
         self.center_panel.render_list()
-        self.center_panel.update_map(routes, live, students)
+        self.center_panel.update_map(routes, live)
         self.left.footer.setText("آخر تحديث: " + datetime.now().strftime("%H:%M:%S"))
 
     def on_error(self, msg):

@@ -202,7 +202,8 @@
     let allDrivers = [];
     let liveDrivers = [];
     let routesLastFetch = 0;
-    let hasZoomed = false; // لمنع تكرار الزوم في كل مرة
+    let hasZoomed = false; 
+    let studentHeartbeat = null;
 
     const busMarkers = {};
     const busPaths = {};
@@ -279,11 +280,19 @@
         document.getElementById('welcomeBar').style.display = 'flex';
     }
 
-    /* ============ حفظ موقع الطالب في السيرفر ============ */
+    /* ============ حفظ موقع الطالب في جدول live_buses ============ */
     async function saveStudentLocationToDB(lat, lng) {
         if (!currentStudent.reg_id || !sb) return;
         try {
-            const { error } = await sb.from('students').update({ lat: lat, lng: lng }).eq('reg_id', currentStudent.reg_id);
+            const { error } = await sb.from('live_buses').upsert({
+                driver_phone: 'student_' + currentStudent.reg_id, // تمييز الطالب بـ student_
+                driver_name: currentStudent.name,
+                area: 'طالب',
+                vehicle_type: 'student', // نوع المركبة طالب
+                lat: lat,
+                lng: lng,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'driver_phone' });
             if (error) console.error("Supabase update error:", error);
         } catch (e) {
             console.error("Failed to sync location to DB:", e);
@@ -308,14 +317,14 @@
                 if (userMarker) userMarker.setLatLng([studentLocation.lat, studentLocation.lng]);
                 else userMarker = L.marker([studentLocation.lat, studentLocation.lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map).bindPopup("<b>موقعك الحالي</b>");
                 
-                // ==========================================
-                // 1. إرسال الموقع إلى لوحة التحكم (Supabase)
-                // ==========================================
                 saveStudentLocationToDB(studentLocation.lat, studentLocation.lng);
 
-                // ==========================================
-                // 2. إصلاح الزوم التلقائي (مرة واحدة فقط)
-                // ==========================================
+                if (!studentHeartbeat) {
+                    studentHeartbeat = setInterval(() => {
+                        if (studentLocation) saveStudentLocationToDB(studentLocation.lat, studentLocation.lng);
+                    }, 10000);
+                }
+
                 if (!hasZoomed || !silent) {
                     map.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
                     hasZoomed = true;
@@ -493,6 +502,7 @@
     /* ============ تحديث ماركر السائق ============ */
     function updateSingleBus(bus) {
         if (bus?.lat == null || bus?.lng == null) return;
+        if (bus.vehicle_type === 'student') return; // تخطي الطلاب (يظهرون في تطبيق الطالب فقط)
 
         const lat = parseFloat(bus.lat);
         const lng = parseFloat(bus.lng);
@@ -575,9 +585,11 @@
     function refreshCounter() {
         const counter = document.getElementById('liveCounter');
         const countText = document.getElementById('busCount');
-        if (liveDrivers.length > 0) {
+        const driverCount = liveDrivers.filter(d => d.vehicle_type !== 'student').length;
+        
+        if (driverCount > 0) {
             counter.style.display = 'flex';
-            countText.textContent = liveDrivers.length;
+            countText.textContent = driverCount;
         } else {
             counter.style.display = 'none';
         }
@@ -705,7 +717,6 @@
         loadRoutes(true);     
         loadLiveBuses();
         
-        // طلب الموقع فوراً عند فتح التطبيق (وسيقوم بالزوم وإرسال الموقع للسيرفر)
         setTimeout(() => {
             locateStudent(true);
         }, 1000);
