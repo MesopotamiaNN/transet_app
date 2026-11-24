@@ -50,41 +50,15 @@
         .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-md) !important; border-radius: 12px !important; overflow: hidden; }
         .leaflet-control-zoom a { background: var(--white) !important; color: var(--text) !important; border-bottom: 1px solid var(--border-light) !important; }
 
-        .top-bar {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; display: flex; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;
-        }
-        
-        .welcome-bar {
-            background: var(--nav-bg); backdrop-filter: blur(20px);
-            padding: 10px 20px; border-radius: 50px; box-shadow: var(--shadow-md);
-            font-weight: 800; color: var(--text); display: none; align-items: center; gap: 8px;
-            font-size: 0.9rem; white-space: nowrap; border: 1px solid var(--border-light);
-            flex: 1; pointer-events: auto;
-        }
-
-        .live-counter {
-            background: var(--success); color: white; padding: 10px 15px; border-radius: 50px;
-            font-weight: 800; font-size: 0.85rem; box-shadow: var(--shadow-md);
-            display: flex; align-items: center; gap: 6px; pointer-events: auto;
-        }
+        .top-bar { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+        .welcome-bar { background: var(--nav-bg); backdrop-filter: blur(20px); padding: 10px 20px; border-radius: 50px; box-shadow: var(--shadow-md); font-weight: 800; color: var(--text); display: none; align-items: center; gap: 8px; font-size: 0.9rem; white-space: nowrap; border: 1px solid var(--border-light); flex: 1; pointer-events: auto; }
+        .live-counter { background: var(--success); color: white; padding: 10px 15px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 6px; pointer-events: auto; }
 
         .map-controls { position: absolute; bottom: 105px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
-        .control-btn { 
-            background: var(--white); color: var(--text); width: 50px; height: 50px; 
-            border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; 
-            transition: 0.3s var(--spring); text-decoration: none;
-        }
+        .control-btn { background: var(--white); color: var(--text); width: 50px; height: 50px; border-radius: 50%; border: none; box-shadow: var(--shadow-md); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s var(--spring); text-decoration: none; }
         .control-btn:active { transform: scale(0.85); }
 
-        .bottom-nav {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg);
-            backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px;
-            box-shadow: var(--shadow-lg); display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid var(--border-light); padding: 0 5px;
-        }
+        .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 68px; background: var(--nav-bg); backdrop-filter: blur(20px); z-index: 2000; border-radius: 24px; box-shadow: var(--shadow-lg); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-light); padding: 0 5px; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 800; cursor: pointer; width: 25%; height: 100%; transition: 0.3s var(--spring); }
         .nav-item i { font-size: 1.3rem; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
@@ -92,12 +66,7 @@
         .nav-item.test-driver { color: var(--danger); }
         .nav-item.support { color: #25D366; }
 
-        .bottom-sheet {
-            position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%;
-            background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.2); transition: bottom 0.4s var(--spring);
-            display: flex; flex-direction: column;
-        }
+        .bottom-sheet { position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%; background: var(--white); z-index: 1500; border-radius: 32px 32px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); transition: bottom 0.4s var(--spring); display: flex; flex-direction: column; }
         .bottom-sheet.open { bottom: 0; }
         
         .drag-handle { width: 45px; height: 6px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 5px; }
@@ -107,20 +76,13 @@
 
         .search-box { padding: 0 25px 15px; position: relative; }
         .search-box i { position: absolute; right: 40px; top: 15px; color: var(--text-muted); }
-        .search-box input { 
-            width: 100%; padding: 12px 45px 12px 15px; border-radius: 14px; border: 2px solid var(--border-light); 
-            font-family: 'Cairo'; font-weight: 700; color: var(--text); outline: none; background: var(--bg); transition: 0.3s;
-        }
+        .search-box input { width: 100%; padding: 12px 45px 12px 15px; border-radius: 14px; border: 2px solid var(--border-light); font-family: 'Cairo'; font-weight: 700; color: var(--text); outline: none; background: var(--bg); transition: 0.3s; }
         .search-box input:focus { border-color: var(--primary-light); background: var(--white); }
 
         .list-container { padding: 0 20px 100px 20px; overflow-y: auto; flex: 1; }
         .list-container::-webkit-scrollbar { display: none; }
 
-        .driver-card { 
-            background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; 
-            padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; 
-            box-shadow: var(--shadow-sm); cursor: pointer; transition: 0.3s;
-        }
+        .driver-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-sm); cursor: pointer; transition: 0.3s; }
         .driver-card:active { transform: scale(0.98); }
         .driver-card.highlight { border-color: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-light); }
         
@@ -154,15 +116,8 @@
         .empty-state i { font-size: 4rem; color: var(--text-muted); margin-bottom: 15px; opacity: 0.5; }
         .empty-state p { color: var(--text-muted); font-weight: 800; font-size: 1.1rem; }
 
-        .pulse-close .bus-icon-bg {
-            animation: pulse-green 1.5s infinite;
-            background: #10b981 !important; 
-        }
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
+        .pulse-close .bus-icon-bg { animation: pulse-green 1.5s infinite; background: #10b981 !important; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
     </style>
 </head>
 <body>
@@ -201,11 +156,7 @@
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-map" onclick="closeSheet()"><i class="fas fa-map-marked-alt"></i> الخريطة</div>
         <div class="nav-item" id="nav-drivers" onclick="openDriversList()"><i class="fas fa-bus-alt"></i> السائقين</div>
-        
-        <div class="nav-item support" onclick="window.open('https://wa.me/9647700000000?text=مرحبا، أحتاج دعم فني', '_blank')">
-            <i class="fab fa-whatsapp"></i> الدعم
-        </div>
-        
+        <div class="nav-item support" onclick="window.open('https://wa.me/9647700000000', '_blank')"><i class="fab fa-whatsapp"></i> الدعم</div>
         <div class="nav-item test-driver" onclick="window.location.href='Driver.html'"><i class="fas fa-user-tie"></i> تجربة</div>
     </div>
 
@@ -232,16 +183,8 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        const busIcon = L.divIcon({ 
-            className: 'custom-bus-icon', 
-            html: '<div class="bus-icon-bg" style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-bus" style="font-size:14px;"></i></div>', 
-            iconSize: [36, 36], iconAnchor: [18, 18] 
-        });
-        const carIcon = L.divIcon({ 
-            className: 'custom-car-icon', 
-            html: '<div class="bus-icon-bg" style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-car" style="font-size:14px;"></i></div>', 
-            iconSize: [36, 36], iconAnchor: [18, 18] 
-        });
+        const busIcon = L.divIcon({ className: 'custom-bus-icon', html: '<div class="bus-icon-bg" style="background:#1e3a8a; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-bus" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+        const carIcon = L.divIcon({ className: 'custom-car-icon', html: '<div class="bus-icon-bg" style="background:#8b5cf6; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;"><i class="fas fa-car" style="font-size:14px;"></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] });
         const userIcon = L.divIcon({ className: 'user-icon', html: '<div style="background:#3b82f6; border:3px solid white; border-radius:50%; width:22px; height:22px; box-shadow:0 0 15px rgba(59,130,246,0.8);"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
         let userMarker = null, studentLocation = null, allDrivers = [], liveDrivers = [];
@@ -258,11 +201,9 @@
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
             let icon = 'fa-check-circle';
             if(type === 'error') icon = 'fa-exclamation-circle';
             if(type === 'alert') icon = 'fa-bell';
-
             toast.innerHTML = `<i class="fas ${icon}" style="font-size:1.2rem;"></i> <span>${message}</span>`;
             document.getElementById('toastContainer').appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
@@ -374,7 +315,6 @@
                 
                 const distanceHTML = `<div class="distance-badge">${distanceText} ${etaText}</div>`;
                 const isLive = route.liveData ? 'border-right: 4px solid var(--success);' : '';
-                
                 const isBus = route.vehicle_type === 'bus';
                 const typeIcon = isBus ? 'fa-bus' : 'fa-car';
                 const typeClass = isBus ? 'bus' : 'car';
@@ -484,14 +424,11 @@
             const { data } = await sb.from('live_buses').select('*');
             
             const now = Date.now();
-            liveDrivers = (data || []).filter(bus => {
-                if (!bus.updated_at) return false;
-                const lastUpdate = new Date(bus.updated_at).getTime();
-                return (now - lastUpdate) < 45000; 
+            liveDrivers = (data || []).map(bus => {
+                // نعين وقت استلام البيانات محلياً لتجنب مشاكل توقيت السيرفر
+                bus.client_updated_at = now; 
+                return bus;
             });
-
-            const oldTime = new Date(Date.now() - 5 * 60000).toISOString(); 
-            sb.from('live_buses').delete().lt('updated_at', oldTime).then();
 
             const counter = document.getElementById('liveCounter');
             const countText = document.getElementById('busCount');
@@ -504,6 +441,7 @@
 
             const currentPhones = liveDrivers.map(b => b.driver_phone);
 
+            // حذف الباصات التي أغلقت التطبيق (لم تعد موجودة في قاعدة البيانات)
             for (let phone in busMarkers) {
                 if (!currentPhones.includes(phone)) {
                     map.removeLayer(busMarkers[phone]);
@@ -532,13 +470,15 @@
                         liveDrivers = liveDrivers.filter(d => d.driver_phone !== phone);
                     } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                         const bus = payload.new;
-                        if (!bus || !bus.updated_at) return;
-                        if ((Date.now() - new Date(bus.updated_at).getTime()) < 45000) {
-                            updateSingleBus(bus);
-                            const idx = liveDrivers.findIndex(d => d.driver_phone === bus.driver_phone);
-                            if(idx > -1) liveDrivers[idx] = bus;
-                            else liveDrivers.push(bus);
-                        }
+                        if (!bus) return;
+                        
+                        // تعيين التوقيت المحلي عند كل تحديث ناجح
+                        bus.client_updated_at = Date.now(); 
+                        
+                        updateSingleBus(bus);
+                        const idx = liveDrivers.findIndex(d => d.driver_phone === bus.driver_phone);
+                        if(idx > -1) liveDrivers[idx] = bus;
+                        else liveDrivers.push(bus);
                     }
                     
                     const counter = document.getElementById('liveCounter');
@@ -549,18 +489,23 @@
                     if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
                 }).subscribe();
 
-            // فحص دوري كل 10 ثوانٍ لإزالة الباصات الشبحية
+            // 🚨 الفحص الدوري (كل 5 ثوانٍ) لإزالة أي باص لم يرسل تحديث منذ 45 ثانية
             setInterval(() => {
                 const now = Date.now();
                 liveDrivers.forEach(bus => {
-                    if (bus.updated_at && (now - new Date(bus.updated_at).getTime()) > 45000) {
+                    if (bus.client_updated_at && (now - bus.client_updated_at) > 45000) {
                         if (busMarkers[bus.driver_phone]) { map.removeLayer(busMarkers[bus.driver_phone]); delete busMarkers[bus.driver_phone]; }
                         if (busPaths[bus.driver_phone]) { map.removeLayer(busPaths[bus.driver_phone]); delete busPaths[bus.driver_phone]; }
                         liveDrivers = liveDrivers.filter(d => d.driver_phone !== bus.driver_phone);
                         if(document.getElementById('mainSheet').classList.contains('open')) renderDrivers();
+                        
+                        const counter = document.getElementById('liveCounter');
+                        const countText = document.getElementById('busCount');
+                        if(liveDrivers.length > 0) { counter.style.display = 'flex'; countText.textContent = liveDrivers.length; }
+                        else { counter.style.display = 'none'; }
                     }
                 });
-            }, 10000);
+            }, 5000);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
