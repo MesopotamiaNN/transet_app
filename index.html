@@ -139,7 +139,7 @@
 
     <div class="map-controls">
         <button class="control-btn" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
-        <button class="control-btn" onclick="locateStudent(false)"><i class="fas fa-crosshairs"></i></button>
+        <button class="control-btn" onclick="locateStudent()"><i class="fas fa-crosshairs"></i></button>
     </div>
 
     <div class="bottom-sheet" id="mainSheet">
@@ -202,20 +202,23 @@
     let allDrivers = [];
     let liveDrivers = [];
     let routesLastFetch = 0;
+    let hasZoomed = false; // لمنع تكرار الزوم في كل مرة
 
     const busMarkers = {};
     const busPaths = {};
     const lastIsClose = {};
     const notifiedDrivers = new Set();
 
-    const LIVE_TIMEOUT_MS = 20000;   // اختفاء السائق بعد 20 ثانية بدون نبض
-    const ROUTES_CACHE_MS = 60000;   // كاش قائمة السائقين 60 ثانية
-    const AVG_SPEED_KMH = 25;        // متوسط سرعة مدينة واقعي
+    const LIVE_TIMEOUT_MS = 20000;
+    const ROUTES_CACHE_MS = 60000;
+    const AVG_SPEED_KMH = 25;
 
     /* ============ Supabase ============ */
     const SUPABASE_URL = "https://ewivzdrrujuwhkuqqgei.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3aXZ6ZHJydWp1d2hrdXFxZ2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1OTMwNDQsImV4cCI6MjEwNTE2OTA0NH0.ng8N-08Pl2SOr42Dw01fLSG6n8C17BNTG5XDVPdisM8";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentStudent = { reg_id: 'TEST-123', name: 'طالب تجريبي' }; 
 
     /* ============ أدوات ============ */
     function esc(s) {
@@ -245,7 +248,7 @@
         if (type === 'error') icon = 'fa-exclamation-circle';
         if (type === 'alert') icon = 'fa-bell';
         toast.innerHTML = `<i class="fas ${icon}" style="font-size:1.2rem;"></i> <span></span>`;
-        toast.querySelector('span').textContent = message;  // نص آمن
+        toast.querySelector('span').textContent = message;
         document.getElementById('toastContainer').appendChild(toast);
         setTimeout(() => toast.classList.add('show'), 10);
         setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 5000);
@@ -268,11 +271,23 @@
             if (regId && sb) {
                 const { data, error } = await sb.from('students').select('reg_id, name').eq('reg_id', regId).maybeSingle();
                 if (!error && data?.name) {
+                    currentStudent = data;
                     document.getElementById('stdNameDisplay').textContent = data.name;
                 }
             }
         } catch (e) { console.warn('loadStudentData', e); }
         document.getElementById('welcomeBar').style.display = 'flex';
+    }
+
+    /* ============ حفظ موقع الطالب في السيرفر ============ */
+    async function saveStudentLocationToDB(lat, lng) {
+        if (!currentStudent.reg_id || !sb) return;
+        try {
+            const { error } = await sb.from('students').update({ lat: lat, lng: lng }).eq('reg_id', currentStudent.reg_id);
+            if (error) console.error("Supabase update error:", error);
+        } catch (e) {
+            console.error("Failed to sync location to DB:", e);
+        }
     }
 
     /* ============ الموقع ============ */
@@ -281,7 +296,7 @@
             if (!silent) showToast("جهازك لا يدعم تحديد الموقع", "error");
             return;
         }
-        if (!silent) locationDenied = false; // محاولة يدوية → اسمح بإعادة الطلب
+        if (!silent) locationDenied = false; 
 
         const btn = document.querySelectorAll('.control-btn')[1]?.querySelector('i');
         const oldIcon = btn ? btn.className : '';
@@ -292,9 +307,23 @@
                 studentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 if (userMarker) userMarker.setLatLng([studentLocation.lat, studentLocation.lng]);
                 else userMarker = L.marker([studentLocation.lat, studentLocation.lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map).bindPopup("<b>موقعك الحالي</b>");
-                map.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
+                
+                // ==========================================
+                // 1. إرسال الموقع إلى لوحة التحكم (Supabase)
+                // ==========================================
+                saveStudentLocationToDB(studentLocation.lat, studentLocation.lng);
+
+                // ==========================================
+                // 2. إصلاح الزوم التلقائي (مرة واحدة فقط)
+                // ==========================================
+                if (!hasZoomed || !silent) {
+                    map.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
+                    hasZoomed = true;
+                }
+
                 if (btn) btn.className = 'fas fa-crosshairs';
-                if (!silent) showToast("تم تحديد موقعك بنجاح");
+                if (!silent) showToast("تم تحديد موقعك ومزامنته بنجاح");
+                
                 if (isSheetOpen()) renderDrivers();
             },
             (err) => {
@@ -323,7 +352,7 @@
     async function loadRoutes(force = false) {
         const now = Date.now();
         if (!force && allDrivers.length > 0 && (now - routesLastFetch) < ROUTES_CACHE_MS) {
-            return true; // استخدم الكاش
+            return true;
         }
         try {
             const { data, error } = await sb.from('routes').select('*').eq('active', true);
@@ -344,14 +373,12 @@
         document.getElementById('mainSheet').classList.add('open');
         document.getElementById('searchBoxContainer').style.display = 'block';
 
-        // skeleton فقط لو ما عندنا كاش
         if (allDrivers.length === 0) {
             document.getElementById('listContainer').innerHTML = Array(3).fill('<div class="skeleton-card"></div>').join('');
         } else {
             renderDrivers();
         }
 
-        // اطلب الموقع تلقائياً عند فتح القائمة (مرة واحدة فقط، وليس عند كل فتح)
         if (!studentLocation && !locationDenied) {
             locateStudent(true);
         }
@@ -382,7 +409,6 @@
             );
         }
 
-        // الأولوية: مباشر ثم الأقرب
         displayDrivers.sort((a, b) => {
             const aLive = a.liveData ? 0 : 1;
             const bLive = b.liveData ? 0 : 1;
@@ -406,7 +432,6 @@
             const safeCar = esc(route.car || '');
             const waMessage = encodeURIComponent(`مرحباً كابتن ${route.driver_name}، أنا طالب من جامعة الناجي. هل لديك مقعد شاغر في خط (${route.area})؟`);
 
-            // شارة المسافة
             let distanceHTML;
             if (route.liveData && route.distance !== null) {
                 const etaMinutes = Math.ceil((route.distance / AVG_SPEED_KMH) * 60);
@@ -492,7 +517,6 @@
             notifiedDrivers.delete(phone);
         }
 
-        // تحديث الأيقونة فقط عند تغيّر حالة القرب (لتجنّب قطع الأنيميشن)
         const isBus = bus.vehicle_type === 'bus';
         const desiredIcon = isClose
             ? (isBus ? pulseIconBus : pulseIconCar)
@@ -516,7 +540,7 @@
                 .addTo(map)
                 .bindPopup(popupContent)
                 .on('click', () => {
-                    document.getElementById('searchInput').value = ''; // امسح الفلتر ليظهر الكارد
+                    document.getElementById('searchInput').value = ''; 
                     openDriversList();
                     setTimeout(() => {
                         const card = document.getElementById(`card_${sanitizePhone(phone)}`);
@@ -526,7 +550,6 @@
             lastIsClose[phone] = isClose;
         }
 
-        // المسار
         const lineColor = isClose ? '#10b981' : (bus.vehicle_type === 'bus' ? '#3b82f6' : '#8b5cf6');
         if (bus.path && bus.path.length > 1) {
             if (busPaths[phone]) {
@@ -574,21 +597,17 @@
 
                 const existing = liveDrivers.find(d => d.driver_phone === bus.driver_phone);
                 if (existing) {
-                    // حافظ على last_seen الحالي (realtime هو المصدر)
                     bus.last_seen = existing.last_seen;
                 } else {
-                    // اعتمد على updated_at الحقيقي من DB
                     const updatedAt = bus.updated_at ? new Date(bus.updated_at).getTime() : now;
                     bus.last_seen = updatedAt;
                 }
 
-                // تجاهل الصفوف القديمة جداً
                 if ((now - bus.last_seen) <= LIVE_TIMEOUT_MS) {
                     freshData.push(bus);
                 }
             });
 
-            // احذف ماركرات السائقين الذين اختفوا
             for (const phone in busMarkers) {
                 if (!freshData.find(b => b.driver_phone === phone)) {
                     removeBus(phone);
@@ -609,7 +628,6 @@
     function loadLiveBuses() {
         fetchLiveBuses();
 
-        // 1) اشتراك live_buses (المواقع)
         sb.channel('live_buses_channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'live_buses' }, payload => {
                 if (payload.eventType === 'DELETE') {
@@ -635,7 +653,6 @@
                 if (isSheetOpen()) renderDrivers();
             }).subscribe();
 
-        // 2) اشتراك routes (المقاعد + الإضافة/الإزالة)
         sb.channel('routes_channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'routes' }, payload => {
                 if (payload.eventType === 'DELETE') {
@@ -660,7 +677,6 @@
                 if (isSheetOpen()) renderDrivers();
             }).subscribe();
 
-        // 3) تنظيف السائقين المنقطعين (كل 5 ثوانٍ)
         setInterval(() => {
             const now = Date.now();
             let changed = false;
@@ -686,9 +702,13 @@
     /* ============ التهيئة ============ */
     document.addEventListener('DOMContentLoaded', () => {
         loadStudentData();
-        loadRoutes(true);     // جلب أولي (بدون طلب موقع)
+        loadRoutes(true);     
         loadLiveBuses();
-        // لا نطلب الموقع تلقائياً — يُطلب عند فتح قائمة السائقين أو بالزر
+        
+        // طلب الموقع فوراً عند فتح التطبيق (وسيقوم بالزوم وإرسال الموقع للسيرفر)
+        setTimeout(() => {
+            locateStudent(true);
+        }, 1000);
     });
 </script>
 </body>
